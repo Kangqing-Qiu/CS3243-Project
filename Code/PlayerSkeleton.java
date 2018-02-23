@@ -6,7 +6,7 @@ public class PlayerSkeleton {
 		
 		return 0;
 	}
-	//Main
+	
 	public static void main(String[] args) {
 		State s = new State();
 		new TFrame(s);
