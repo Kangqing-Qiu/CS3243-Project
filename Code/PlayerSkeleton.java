@@ -7,7 +7,7 @@ class Individual implements Comparable<Individual>{
 	// weight for each heuristic
 	public double[] weights = new double[NUM_WEIGHTS];
 	// result after playing games; equivalent to lines cleared after game
-	public int gameScore;
+	public int gameScore = 0;
 
 	// the constructor initializes the weights randomly. All weights are within
 	// range (-10, 0) except for linesCleared, which is in the range (0, 10)
@@ -23,9 +23,7 @@ class Individual implements Comparable<Individual>{
 	// cross two individuals and returns the 2 children
 	// TESTED
 	public Individual[] cross(Individual p2, double crossRate) {
-		Individual[] children = new Individual[2];
-		children[0] = this;
-		children[1] = p2;
+		Individual[] children = {this, p2};
 		if (Math.random() > crossRate) {
 			return children;
 		}
@@ -71,7 +69,7 @@ class Individual implements Comparable<Individual>{
 	}
 
 	// for debugging purposes
-	public void print() {
+	public void printInd() {
 		System.out.println("Weights are: " + weights[0] + ", " + weights[1] + ", " + weights[2] + ", " + weights[3] + ", " + weights[4] + ", " + weights[5]);
 		System.out.println("gameScore is: " + gameScore);
 	}
@@ -101,7 +99,7 @@ class Population{
 	public static void printPop(Individual[] pop) {
 		int len = pop.length;
 		for (int i = 0; i < len; i++) {
-			pop[i].print();
+			pop[i].printInd();
 			System.out.println();
 		}
 	}
@@ -162,12 +160,19 @@ public class PlayerSkeleton{
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
 		double TOURNAMENT_RATE=0.5;
+		// REPLACEMENT_SIZE must be even number
 		int REPLACEMENT_SIZE = (int) Math.ceil(POP_SIZE * REPLACEMENT_RATE);
+		if (REPLACEMENT_SIZE % 2 == 1) {REPLACEMENT_SIZE -= 1;}
+		System.out.println("REPLACEMENT_SIZE: " + REPLACEMENT_SIZE);
 		int TOURNAMENT_SIZE = (int) Math.ceil(POP_SIZE * TOURNAMENT_RATE);
 		// (0,1) value that describes the chance with which a mutation occurs
 		double mutationRate=(1.0/6.0);
 		// (0,1) value that describes the chance with which crossover occurs
 		double crossRate=0.5;
+
+		// for debugging purposes
+		int acceptCount = 0; 
+		int rejectCount = 0;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
 		// for every generation
@@ -197,6 +202,7 @@ public class PlayerSkeleton{
 
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
+			int childIndex = 0;
 			while (childrenCount < REPLACEMENT_SIZE) {
 				boolean crossed = false;
 				boolean mutatedOne = false;
@@ -211,9 +217,7 @@ public class PlayerSkeleton{
 				Arrays.sort(tournamentPlayers);
 				Individual p1 = tournamentPlayers[0];
 				Individual p2 = tournamentPlayers[1];
-				Individual[] children = new Individual[2];
-				children[0] = p1;
-				children[1] = p2;
+				Individual[] children = {p1, p2};
 				if (Math.random() < crossRate) {
 					children = p1.cross(p2, crossRate);
 					crossCount++;
@@ -227,6 +231,7 @@ public class PlayerSkeleton{
 					if (children[0].gameScore < p2.gameScore 
 						&& children[1].gameScore < p2.gameScore) {
 						System.out.println("rejected crossed children");
+						rejectCount++;
 						if (crossed) {crossCount--;}
 						continue; // go back to while loop
 					}
@@ -254,6 +259,7 @@ public class PlayerSkeleton{
 					// otherwise, retain both children
 					if (children[0].gameScore < p2.gameScore && children[1].gameScore < p2.gameScore) {
 						System.out.println("rejected mutated children");
+						rejectCount++;
 						if (mutatedOne) {mutationCount--;}
 						if (mutatedTwo) {mutationCount--;}
 						continue; // go back to while loop
@@ -267,11 +273,16 @@ public class PlayerSkeleton{
 					}
 				}
 				System.out.println("accepting children");
+				acceptCount++;
 				childrenCount += 2;
 
-				allChildren[i] = children[0];
-				allChildren[i+1] = children[1];
+				allChildren[childIndex] = children[0];
+				allChildren[childIndex+1] = children[1];
+				childIndex += 2;
 			}
+			System.out.println("printing allChildren");
+			System.out.println("length is " + REPLACEMENT_SIZE);
+			Population.printPop(allChildren);
 			System.out.println("finished creating all children");
 
 			// can we avoid doing this here? (need allChildren[j] to have gameScore)
@@ -306,6 +317,7 @@ public class PlayerSkeleton{
 			crossRates[i] = crossRate;
 			mutationRates[i] = mutationRate;
 		}
+		System.out.println("rejected " + rejectCount + ", accepted " + acceptCount);
 		// return the weights of the strongest individual after evolution process is complete
 		Arrays.sort(population);
 		return population[0].weights;
@@ -343,7 +355,7 @@ public class PlayerSkeleton{
 		Population.printPop(children); 
 
 		children[0].mutate(1.0);
-		children[0].print();
+		children[0].printInd();
 
 		double[] data = {9.0, 4.0, 3.0};
 		plotData("test", data);
