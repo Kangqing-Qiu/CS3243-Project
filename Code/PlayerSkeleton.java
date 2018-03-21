@@ -45,7 +45,7 @@ class Individual implements Comparable<Individual>{
 	// check if there's a better function to get a random int
 	public void mutate(double mutationRate) {
 		// chose a weight to mutate
-		int MUTATED_WEIGHT = (int)Math.random() * NUM_WEIGHTS;
+		int MUTATED_WEIGHT = (int)(Math.random() * NUM_WEIGHTS);
 		if (Math.random() < mutationRate) {
 			if (MUTATED_WEIGHT == 1) { // picked weight is linesCleared
 				this.weights[MUTATED_WEIGHT] = (10)*Math.random(); 
@@ -211,7 +211,7 @@ public class PlayerSkeleton{
 				Individual[] tournamentPlayers = new Individual[TOURNAMENT_SIZE];
 				// randomly choose TOURNAMENT_SIZE number of individuals
 				for (int k = 0; k < TOURNAMENT_SIZE; k++) {
-					int chosen = (int) Math.random() * POP_SIZE; // check off by one?
+					int chosen = (int) (Math.random() * POP_SIZE); // check off by one?
 					tournamentPlayers[k] = population[chosen];
 				}
 				Arrays.sort(tournamentPlayers);
@@ -364,26 +364,28 @@ public class PlayerSkeleton{
 
 	public static void main(String[] args) {
 		double[] foundWeights = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-		if (args[0].equals("--evolve")) {
-			double[] weights = evolveWeights();
-			System.out.println("Evolved weights are" + Arrays.toString(weights));
-			plotData("scores vs gen", scores);
-			plotData("crossRates vs gen", crossRates);
-			plotData("mutationRates vs gen", mutationRates);
+		switch (args[0]) {
+			case "--evolve":
+				double[] weights = evolveWeights();
+				System.out.println("Evolved weights are" + Arrays.toString(weights));
+				plotData("scores vs gen", scores);
+				plotData("crossRates vs gen", crossRates);
+				plotData("mutationRates vs gen", mutationRates);
 
-		}
-		// directly play game with found weights
-		// TODO
-		else if (args[0].equals("--play")) {
-			playGame(foundWeights);
-		}
-		else if (args[0].equals("--test")) {
-			runTests();
-		}
-		else {
-			System.out.println("To evolve the weights, use '--evolve'.");
-			System.out.println("To play the game using our weights, use '--play'.");
-			System.out.println("To run tests, use '--test'.");
+				break;
+			// directly play game with found weights
+			// TODO
+			case "--play":
+				playGame(foundWeights);
+				break;
+			case "--test":
+				runTests();
+				break;
+			default:
+				System.out.println("To evolve the weights, use '--evolve'.");
+				System.out.println("To play the game using our weights, use '--play'.");
+				System.out.println("To run tests, use '--test'.");
+				break;
 		}
 	}
 

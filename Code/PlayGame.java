@@ -2,7 +2,7 @@ import java.util.*;
 import java.io.*;
 import java.util.Random;
 
-public class PlayerSkeleton {
+public class PlayGame {
 
     public static int[][] copyField(int[][] oldField){
         int[][] copiedField = new int[oldField.length][];
@@ -16,6 +16,7 @@ public class PlayerSkeleton {
     // similar to makemove in State.java, since we cannot do this on the original board
     //the final keyword is used in several contexts to define an entity that can only be assigned once.
     public Boolean playMove(final State s, final int orient,final int slot,int[][] playField,final int[] playTop) {
+        // TODO: clarify variables
         int pWidth[][] = s.getpWidth();
         int pHeight[][] = s.getpHeight();
         int pTop[][][] = s.getpTop();
@@ -45,13 +46,14 @@ public class PlayerSkeleton {
         }
 
         //adjust top
-        for(c = 0; c < pWidth[nextPiece][orient]; c++) {
+        for(int c = 0; c < pWidth[nextPiece][orient]; c++) {
             playTop[slot+c] = height+pTop[nextPiece][orient][c];
         }
         return true;
     }
 
     public double findFitness(final int[][] playField, final int[] playTop,double[] tempWgts){
+        // TODO: clarify variables
         int maxRow = playField.length;
         int maxCol = playField[0].length;
         //temp test features
@@ -91,6 +93,7 @@ public class PlayerSkeleton {
     }
 
     public int pickMove(State s, int[][] legalMoves) {
+        // TODO: clarify variables
         //Variable declaration
         tempWeights =  new double[] {-7.25,3.87};
         double maxScore = -9999;

@@ -1,12 +1,11 @@
-import java.awt.Graphics2D;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
-import javax.imageio.ImageIO;
-import javax.swing.JFrame;
 
 
 
@@ -61,7 +60,6 @@ public class TFrame extends JFrame implements KeyListener{
 		this.addKeyListener(this);  //may be unnecessary (not certain)
 		setVisible(true);
 	}
-
 	public void keyPressed(KeyEvent e) {
 		switch(mode) {
 			case(MANUAL): {
