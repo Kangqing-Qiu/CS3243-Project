@@ -331,7 +331,7 @@ public class PlayerSkeleton{
 	// TODO
 	// note: pickMove should take weights into consideration
 	public static int playGame(double[] weights) {
-		return (int) Math.random() * 50;
+		return (int) (Math.random() * 50);
 	}
 
 	// TODO
@@ -344,7 +344,22 @@ public class PlayerSkeleton{
 		for (int i = 0; i < data.length; i++) {
 			System.out.print(data[i] + " ");
 		}
-		System.out.println();
+		double[] x = new double[data.length]; x[0] = 1;
+		for(int i = 1; i < x.length; i++){
+			x[i] = i+1;
+		}
+		MatlabChart fig = new MatlabChart();
+		fig.plot(x, data, "-r", 2.0f, "AAPL");
+		fig.RenderPlot();
+		fig.title(name);
+		fig.xlim(10, 100);
+		fig.ylim(200, 300);
+		fig.xlabel("Days");
+		fig.ylabel("Price");
+		fig.grid("on","on");
+		fig.legend("northeast");
+		fig.font("Helvetica",15);
+		fig.saveas(name+".jpeg",640,480);
 	}
 
 	public static void runTests() {
@@ -368,10 +383,10 @@ public class PlayerSkeleton{
 			case "--evolve":
 				double[] weights = evolveWeights();
 				System.out.println("Evolved weights are" + Arrays.toString(weights));
+				//plotData for scores, crossRates and mutationRates vs gen
 				plotData("scores vs gen", scores);
 				plotData("crossRates vs gen", crossRates);
 				plotData("mutationRates vs gen", mutationRates);
-
 				break;
 			// directly play game with found weights
 			// TODO

@@ -1,6 +1,26 @@
-/*Reference: https://stackoverflow.com/questions/38931111/how-to-make-plots-in-java-like-in-matlab-same-syntax
-public class Demo {
+//Reference: https://stackoverflow.com/questions/38931111/how-to-make-plots-in-java-like-in-matlab-same-syntax
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYTitleAnnotation;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.block.BlockBorder;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+
+public class MatlabChart {
+    /*
     public static void main(String[] args) {
 
         // Create some sample data
@@ -28,30 +48,7 @@ public class Demo {
         fig.font("Helvetica",15);
         fig.saveas("MyPlot.jpeg",640,480);
     }
-}
- */
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.annotations.XYTitleAnnotation;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.block.BlockBorder;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.title.LegendTitle;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.RectangleAnchor;
-import org.jfree.ui.RectangleEdge;
-
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
-
-public class MatlabChart {
-
+*/
     Font font;
     JFreeChart chart;
     LegendTitle legend;
@@ -248,35 +245,3 @@ public class MatlabChart {
         strokes.add(stroke);
     }
 }
-/*
-public class Demo {
-
-    public static void main(String[] args) {
-
-        // Create some sample data
-        double[] x = new double[100]; x[0] = 1;
-        double[] y1 = new double[100]; y1[0] = 200;
-        double[] y2 = new double[100]; y2[0] = 300;
-        for(int i = 1; i < x.length; i++){
-            x[i] = i+1;
-            y1[i] = y1[i-1] + Math.random()*10 - 4;
-            y2[i] = y2[i-1] + Math.random()*10 - 6;
-        }
-
-        // JAVA:
-        MatlabChart fig = new MatlabChart();
-        fig.plot(x, y1, "-r", 2.0f, "AAPL");
-        fig.plot(x, y2, ":k", 3.0f, "BAC");
-        fig.RenderPlot();
-        fig.title("Stock 1 vs. Stock 2");
-        fig.xlim(10, 100);
-        fig.ylim(200, 300);
-        fig.xlabel("Days");
-        fig.ylabel("Price");
-        fig.grid("on","on");
-        fig.legend("northeast");
-        fig.font("Helvetica",15);
-        fig.saveas("MyPlot.jpeg",640,480);
-    }
-}
- */
