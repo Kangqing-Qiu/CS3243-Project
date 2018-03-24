@@ -3,7 +3,6 @@ import java.io.*;
 import java.util.Random;
 
 public class PlayGame {
-
 	public class PlayOnThisBoard{
 		private int[][] playField;
 		private int[] playTop;
@@ -56,12 +55,8 @@ public class PlayGame {
 	        return true;
 	    }
 	}
-
-
     // similar to makemove in State.java, since we cannot do this on the original board
     //the final keyword is used in several contexts to define an entity that can only be assigned once.
-
-
     public double findFitness(final int[][] playField, final int[] playTop,double[] tempWgts){
         // TODO: clarify variables
         int maxRow = playField.length;
@@ -86,8 +81,6 @@ public class PlayGame {
 				landingHeight = newTop[i];
 			}
 		}
-
-
 		for(int i = 0; i<maxRow; i++) {
 			boolean lastCell = false;
 			boolean currentCell = false;
@@ -151,8 +144,7 @@ public class PlayGame {
 			}
 		}
         return landingHeight*tempWgts[0] + rowsCleared*tempWgts[1]+ rowTransitions*tempWgts[2] + 
-		columnTransitions*tempWgts[3] + numHoles*tempWgts[4] + wellSums*tempWgts[5];
-        
+		columnTransitions*tempWgts[3] + numHoles*tempWgts[4] + wellSums*tempWgts[5];     
     }
 
     public int pickMove(State s, int[][] legalMoves) {
