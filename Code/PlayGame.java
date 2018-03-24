@@ -4,98 +4,161 @@ import java.util.Random;
 
 public class PlayGame {
 
-    public static int[][] copyField(int[][] oldField){
-        int[][] copiedField = new int[oldField.length][];
-        int length = oldField[0].length;
-        for(int i = 0; i < oldField.length; i++){
-            copiedField[i] = Arrays.copyOf(oldField[i], length);
-        }
-        return copiedField;
-    }
+	public class PlayOnThisBoard{
+		private int[][] playField;
+		private int[] playTop;
+		private PlayOnThisBoard(int[][] oldField,int[] oldTop){
+			playTop = Arrays.copyOf(oldTop, oldTop.length);
+			playField = new int[oldField.length][];
+       		for(int i = 0; i < oldField.length; i++){
+            	playField[i] = Arrays.copyOf(oldField[i], oldField[i].length);
+        	}
+		}
+
+		public int[][] getplayField(){
+			return playField;
+		}
+
+		public int[] getplayTop(){
+			return playTop;
+		}
+
+	    public Boolean playMove(State s,int orient,int slot) {
+	        // TODO: clarify variables
+	        int pWidth[][] = s.getpWidth();
+	        int pHeight[][] = s.getpHeight();
+	        int pTop[][][] = s.getpTop();
+	        int pBottom[][][] = s.getpBottom();
+	        int nextPiece = s.getNextPiece();
+	        int turnNumber = s.getTurnNumber();
+	        turnNumber++;
+	        //height if the first column makes contact
+	        int height = playTop[slot]-pBottom[nextPiece][orient][0];
+	        //for each column beyond the first in the piece
+	        for(int c = 1; c < pWidth[nextPiece][orient]; c++) {
+	            height = Math.max(height,playTop[slot+c] - pBottom[nextPiece][orient][c]);
+	        }
+	        //check if game ended
+	        if(height+pHeight[nextPiece][orient] >= State.ROWS) {
+	            return false;
+	        }
+	        //for each column in the piece - fill in the appropriate blocks
+	        for(int i = 0; i < pWidth[nextPiece][orient]; i++) {
+	            //from bottom to top of brick
+	            for(int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
+	                playField[h][i+slot] = turn;
+	            }
+	        }
+	        //adjust top
+	        for(int c = 0; c < pWidth[nextPiece][orient]; c++) {
+	            playTop[slot+c] = height+pTop[nextPiece][orient][c];
+	        }
+	        return true;
+	    }
+	}
+
 
     // similar to makemove in State.java, since we cannot do this on the original board
     //the final keyword is used in several contexts to define an entity that can only be assigned once.
-    public Boolean playMove(final State s, final int orient,final int slot,int[][] playField,final int[] playTop) {
-        // TODO: clarify variables
-        int pWidth[][] = s.getpWidth();
-        int pHeight[][] = s.getpHeight();
-        int pTop[][][] = s.getpTop();
-        int pBottom[][][] = s.getpBottom();
-        int nextPiece = s.getNextPiece();
-        int turnNumber = s.getTurnNumber();
 
-        turnNumber++;
-        //height if the first column makes contact
-        int height = playTop[slot]-pBottom[nextPiece][orient][0];
-        //for each column beyond the first in the piece
-        for(int c = 1; c < pWidth[nextPiece][orient]; c++) {
-            height = Math.max(height,playTop[slot+c] - pBottom[nextPiece][orient][c]);
-        }
-
-        //check if game ended
-        if(height+pHeight[nextPiece][orient] >= State.ROWS) {
-            return false;
-        }
-
-        //for each column in the piece - fill in the appropriate blocks
-        for(int i = 0; i < pWidth[nextPiece][orient]; i++) {
-            //from bottom to top of brick
-            for(int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
-                playField[h][i+slot] = turn;
-            }
-        }
-
-        //adjust top
-        for(int c = 0; c < pWidth[nextPiece][orient]; c++) {
-            playTop[slot+c] = height+pTop[nextPiece][orient][c];
-        }
-        return true;
-    }
 
     public double findFitness(final int[][] playField, final int[] playTop,double[] tempWgts){
         // TODO: clarify variables
         int maxRow = playField.length;
         int maxCol = playField[0].length;
         //temp test features
-        double landingHeight = 0;
-        double rowsCleared = 0;
-        for(int i = 0; i<maxCol; i++) {
-            for (int j  = newTop[i]-1; j >=0; j--) {
-                if(newField[j][i] == 0) numHoles++;
-            }
-            if(newField[Math.max(newTop[i]-1, 0)][i] > moveNumber) {
-                moveNumber = newField[Math.max(newTop[i]-1, 0)][i];
-                
-                landingHeight = newTop[i];
-            }
-        }
-        for(int i = 0; i<maxRow; i++) {
-            boolean lastCell = false;
-            boolean currentCell = false;
-            int rowIsClear = 1;
-            for (int j = 0; j<maxCol; j++) {
-                currentCell = false;
-                if(newField[i][j] == 0) {
-                    rowIsClear = 0;
-                    currentCell = true;
-                }
-                
-                if(lastCell != currentCell) {
-                    rowTransitions++;
-                }
-                lastCell = currentCell;
-            }
-            rowsCleared += rowIsClear;
-            if(currentCell) rowTransitions++;
-        }
-        return landingHeight*tempWgts[0] + rowsCleared*tempWgts[1];
+		double landingHeight = 0; // Done
+		double rowsCleared = 0; // Done
+		double rowTransitions = 0; // Done
+		double columnTransitions = 0; // Done
+		double numHoles = 0; // Done
+		double wellSums = 0;
+		int moveNumber = -1;
+
+		for(int i = 0; i<maxCol; i++) {
+			for (int j  = newTop[i]-1; j >=0; j--) {
+				if(newField[j][i] == 0) numHoles++;
+			}
+			// System.out.println(Math.max(newTop[i]-1, 0));
+			if(newField[Math.max(newTop[i]-1, 0)][i] > moveNumber) {
+				moveNumber = newField[Math.max(newTop[i]-1, 0)][i];
+				
+				landingHeight = newTop[i];
+			}
+		}
+
+
+		for(int i = 0; i<maxRow; i++) {
+			boolean lastCell = false;
+			boolean currentCell = false;
+			int rowIsClear = 1;
+			for (int j = 0; j<maxCol; j++) {
+				currentCell = false;
+				if(newField[i][j] == 0) {
+					rowIsClear = 0;
+					currentCell = true;
+				}
+				
+				if(lastCell != currentCell) {
+					rowTransitions++;
+				}
+				lastCell = currentCell;
+			}
+			rowsCleared+=rowIsClear;
+			if(currentCell) rowTransitions++;
+		}
+
+		for(int i = 0; i<maxCol; i++) {
+			boolean lastCell = true;
+			boolean currentCell = false;
+			for (int j = 0; j<maxRow-1; j++) {
+				currentCell = (newField[j][i] != 0);
+				// if(!currentCell && newField[j+1][i] !=0) numHoles++;
+				if(lastCell != currentCell) {
+					columnTransitions++;
+				}
+				lastCell = currentCell;
+			}
+			// if(!currentCell) columnTransitions++;
+		}
+
+		for(int i = 1; i<maxCol-1; i++) {
+			for(int j = 0; j < maxRow; j++) {
+				if(newField[j][i] == 0 && newField[j][i-1] != 0 && newField[j][i+1] != 0) {
+					wellSums++;
+					for (int k = j -1; k >=0; k--) {
+						if(newField[k][i] == 0) wellSums++;
+						else break;
+					}
+				}
+			}
+		}
+
+		for(int j = 0; j < maxRow; j++) {
+			if(newField[j][0] == 0 && newField[j][1] != 0) {
+				wellSums++;
+				for (int k = j -1; k >=0; k--) {
+					if(newField[k][0] == 0) wellSums++;
+					else break;
+				}
+			}
+			if(newField[j][maxCol-1] == 0 && newField[j][maxCol-2] != 0) {
+				wellSums++;
+				for (int k = j -1; k >=0; k--) {
+					if(newField[k][maxCol-1] == 0) wellSums++;
+					else break;
+				}
+			}
+		}
+        return landingHeight*tempWgts[0] + rowsCleared*tempWgts[1]+ rowTransitions*tempWgts[2] + 
+		columnTransitions*tempWgts[3] + numHoles*tempWgts[4] + wellSums*tempWgts[5];
         
     }
 
     public int pickMove(State s, int[][] legalMoves) {
         // TODO: clarify variables
         //Variable declaration
-        tempWeights =  new double[] {-7.25,3.87};
+        tempWeights =  new double[] {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
         double maxScore = -9999;
         int optimalMove = -9999;
         int oldTop[] = s.getTop();
@@ -103,11 +166,12 @@ public class PlayGame {
         for(int moveCount = 0; moveCount < legalMoves.length; moveCount++) {
             int orient = legalMoves[i][0];
             int slot = legalMoves[moveCount][1];
-            int[][] playField = copyField(oldField);
-            int[] playTop = Arrays.copyOf(oldTop, oldTop.length);
+            PlayOnThisBoard playboard = new PlayOnThisBoard(oldField,oldTop);
+            // int[][] playField = copyField(oldField);
+            // int[] playTop = Arrays.copyOf(oldTop, oldTop.length);
             //do this moving on the copied board
-            if(playMove(s, orient, slot, playField, playTop)){
-                double tempScore = findFitness(playField, playTop, tempWeights);
+            if(playboard.playMove(s, orient, slot)){
+                double tempScore = findFitness(playboard.getplayField(), playboard.getplayTop(), tempWeights);
                 if(Math.abs(score - highestScore) < 0.000000001){
                     //whenever the score is similar,random check update or not
                     if(Math.random() > 0.5)
