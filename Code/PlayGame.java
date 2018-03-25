@@ -147,10 +147,9 @@ public class PlayGame {
 		columnTransitions*tempWgts[3] + numHoles*tempWgts[4] + wellSums*tempWgts[5];     
     }
 
-    public int pickMove(State s, int[][] legalMoves) {
+    public int pickMove(double[] weights, State s, int[][] legalMoves) {
         // TODO: clarify variables
         //Variable declaration
-        tempWeights =  new double[] {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
         double maxScore = -9999;
         int optimalMove = -9999;
         int oldTop[] = s.getTop();
@@ -163,7 +162,7 @@ public class PlayGame {
             // int[] playTop = Arrays.copyOf(oldTop, oldTop.length);
             //do this moving on the copied board
             if(playboard.playMove(s, orient, slot)){
-                double tempScore = findFitness(playboard.getplayField(), playboard.getplayTop(), tempWeights);
+                double tempScore = findFitness(playboard.getplayField(), playboard.getplayTop(), weights);
                 if(Math.abs(score - highestScore) < 0.000000001){
                     //whenever the score is similar,random check update or not
                     if(Math.random() > 0.5)
@@ -184,8 +183,9 @@ public class PlayGame {
         State s = new State();
         new TFrame(s);
         PlayerSkeleton p = new PlayerSkeleton();
+	double[] tempWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
         while(!s.hasLost()) {
-            s.makeMove(p.pickMove(s,s.legalMoves()));   //make this optimal move
+            s.makeMove(p.pickMove(tempWeights, s, s.legalMoves()));   //make this optimal move
             s.draw();
             s.drawNext(0,0);
             try {
