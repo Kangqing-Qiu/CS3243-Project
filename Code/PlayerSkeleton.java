@@ -153,16 +153,16 @@ public class PlayerSkeleton{
 		return rates;
 	}
 	  
-	// reduce the poplation size after half of the total generations
+	// reduce the population size after half of the total generations
  	// half constant, half decreases exponentially
   	// NOT YET TESTED
-  	public static void evolvePopSize(){
+  	public static void evolvePopSize(int GENS_count, int POP_SIZE){
     		int t = 1;
     		if (GENS_count < NUM_GENS / 2){
       			POP_SIZE = POP_SIZE;
     		}
     		else{
-      			POP_SIZE = (int)POP_SIZE * Math.exp(-t/5);
+      			POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
     		}
     		t++;
   	}
@@ -193,7 +193,7 @@ public class PlayerSkeleton{
 		for (int i = 0; i < NUM_GENS; i++) {
 			System.out.println("generation " + i);
 			// how many children have been generated so far
-			GENS_count = i;
+			int GENS_count = i;
       			// record the current generation number
 			int childrenCount = 0;
 			// number of crossovers performed in this generation
@@ -214,7 +214,7 @@ public class PlayerSkeleton{
 			// TODO: instead of iterating through population, use mapreduce
 			for (int j = 0; j < POP_SIZE; j++) {
 				population[j].gameScore = getGameResult(population[j].weights);
-				evolvePopSize();
+				evolvePopSize(GENS_count,POP_SIZE);
 			}
 
 			// generate all the children for this generation
@@ -358,8 +358,8 @@ public class PlayerSkeleton{
 
 	public static void plotData(String name, double[] data) {
 		System.out.println("Graph for " + name + ":");
-		for (int i = 0; i < data.length; i++) {
-			System.out.print(data[i] + " ");
+		for (double aData : data) {
+			System.out.print(aData + " ");
 		}
 		double[] x = new double[data.length]; x[0] = 1;
 		for(int i = 1; i < x.length; i++){
