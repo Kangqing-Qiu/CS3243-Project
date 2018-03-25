@@ -113,6 +113,7 @@ public class PlayerSkeleton{
 	static double[] scores = new double[NUM_GENS]; // average game scores
 	static double[] crossRates = new double[NUM_GENS];
 	static double[] mutationRates = new double[NUM_GENS];
+	int t = 1;
 
 	// returns sum of scores over NUM_GAMES games played
 	// TODO: instead of for-loop, use mapreduce
@@ -157,7 +158,6 @@ public class PlayerSkeleton{
  	// half constant, half decreases exponentially
   	// NOT YET TESTED
   	public static void evolvePopSize(int GENS_count, int POP_SIZE){
-    		int t = 1;
     		if (GENS_count < NUM_GENS / 2){
       			POP_SIZE = POP_SIZE;
     		}
