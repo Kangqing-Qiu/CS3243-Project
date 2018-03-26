@@ -157,7 +157,7 @@ public class PlayerSkeleton{
 	// reduce the population size after half of the total generations
  	// half constant, half decreases exponentially
   	// NOT YET TESTED
-  	public static void evolvePopSize(int genCount, int POP_SIZE){
+  	public static int evolvePopSize(int genCount, int POP_SIZE){
     		if (genCount < NUM_GENS / 2){
       			POP_SIZE = POP_SIZE;
     		}
@@ -165,6 +165,7 @@ public class PlayerSkeleton{
       			POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
     		}
     		t++; // increase time variable
+		return POP_SIZE;
   	}
 	
 	// uses the genetic algorithm and returns the best weights
@@ -364,6 +365,7 @@ public class PlayerSkeleton{
 			x[i] = i+1;
 		}
 		MatlabChart fig = new MatlabChart();
+
 		fig.plot(x, data, "-r", 2.0f, "AAPL");
 		fig.RenderPlot();
 		fig.title(name);
@@ -389,7 +391,12 @@ public class PlayerSkeleton{
 
 		double[] data = {9.0, 4.0, 3.0};
 		plotData("test", data);
-
+		
+		int NUM_GENS = 2;
+  		for (int i = 1; i < NUM_GENS; i++ ){
+    			POP = evolvePopSize(i, 5);
+    			println(POP);
+ 		}
 	}
 
 	public static void main(String[] args) {
