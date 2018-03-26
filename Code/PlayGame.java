@@ -1,4 +1,6 @@
-import java.util.Arrays;
+import java.util.*;
+import java.io.*;
+import java.util.Random;
 
 public class PlayGame {
 	public class PlayOnThisBoard{
@@ -43,7 +45,7 @@ public class PlayGame {
 	        for(int i = 0; i < pWidth[nextPiece][orient]; i++) {
 	            //from bottom to top of brick
 	            for(int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
-	                playField[h][i+slot] = turnNumber;
+	                playField[h][i+slot] = turnN;
 	            }
 	        }
 	        //adjust top
@@ -176,4 +178,21 @@ public class PlayGame {
         if (optimalMove == -9999) {return 0;}
         return optimalMove;
     }
+	public static void main(String[] args) {
+		State s = new State();
+		new TFrame(s);
+		PlayerSkeleton p = new PlayerSkeleton();
+		double[] tempWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
+		while(!s.hasLost()) {
+			s.makeMove(p.pickMove(tempWeights, s, s.legalMoves()));   //make this optimal move
+			s.draw();
+			s.drawNext(0,0);
+			try {
+				Thread.sleep(300);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
+	}
 }
