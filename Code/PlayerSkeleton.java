@@ -350,7 +350,7 @@ public class PlayerSkeleton{
 	}
 
 	// TODO
-	public static int pickMove(State s, int[][] legalMoves){
+	public static int pickMove(double[] tempWeights, State s, int[][] legalMoves){
 		return 0;
 	}
 

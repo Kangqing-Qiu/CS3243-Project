@@ -1,6 +1,4 @@
-import java.util.*;
-import java.io.*;
-import java.util.Random;
+import java.util.Arrays;
 
 public class PlayGame {
 	public class PlayOnThisBoard{
@@ -45,7 +43,7 @@ public class PlayGame {
 	        for(int i = 0; i < pWidth[nextPiece][orient]; i++) {
 	            //from bottom to top of brick
 	            for(int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
-	                playField[h][i+slot] = turnN;
+	                playField[h][i+slot] = turnNumber;
 	            }
 	        }
 	        //adjust top
