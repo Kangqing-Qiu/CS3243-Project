@@ -1,6 +1,4 @@
-import java.util.*;
-import java.io.*;
-import java.util.Random;
+import java.util.Arrays;
 
 public class PlayGame {
 	public class PlayOnThisBoard{
@@ -45,7 +43,7 @@ public class PlayGame {
 	        for(int i = 0; i < pWidth[nextPiece][orient]; i++) {
 	            //from bottom to top of brick
 	            for(int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
-	                playField[h][i+slot] = turn;
+	                playField[h][i+slot] = turnNumber;
 	            }
 	        }
 	        //adjust top
@@ -71,14 +69,14 @@ public class PlayGame {
 		int moveNumber = -1;
 
 		for(int i = 0; i<maxCol; i++) {
-			for (int j  = newTop[i]-1; j >=0; j--) {
-				if(newField[j][i] == 0) numHoles++;
+			for (int j  = playTop[i]-1; j >=0; j--) {
+				if(playField[j][i] == 0) numHoles++;
 			}
 			// System.out.println(Math.max(newTop[i]-1, 0));
-			if(newField[Math.max(newTop[i]-1, 0)][i] > moveNumber) {
-				moveNumber = newField[Math.max(newTop[i]-1, 0)][i];
+			if(playField[Math.max(playTop[i]-1, 0)][i] > moveNumber) {
+				moveNumber = playField[Math.max(playTop[i]-1, 0)][i];
 				
-				landingHeight = newTop[i];
+				landingHeight = playTop[i];
 			}
 		}
 		for(int i = 0; i<maxRow; i++) {
@@ -87,7 +85,7 @@ public class PlayGame {
 			int rowIsClear = 1;
 			for (int j = 0; j<maxCol; j++) {
 				currentCell = false;
-				if(newField[i][j] == 0) {
+				if(playField[i][j] == 0) {
 					rowIsClear = 0;
 					currentCell = true;
 				}
@@ -105,7 +103,7 @@ public class PlayGame {
 			boolean lastCell = true;
 			boolean currentCell = false;
 			for (int j = 0; j<maxRow-1; j++) {
-				currentCell = (newField[j][i] != 0);
+				currentCell = (playField[j][i] != 0);
 				// if(!currentCell && newField[j+1][i] !=0) numHoles++;
 				if(lastCell != currentCell) {
 					columnTransitions++;
@@ -117,10 +115,10 @@ public class PlayGame {
 
 		for(int i = 1; i<maxCol-1; i++) {
 			for(int j = 0; j < maxRow; j++) {
-				if(newField[j][i] == 0 && newField[j][i-1] != 0 && newField[j][i+1] != 0) {
+				if(playField[j][i] == 0 && playField[j][i-1] != 0 && playField[j][i+1] != 0) {
 					wellSums++;
 					for (int k = j -1; k >=0; k--) {
-						if(newField[k][i] == 0) wellSums++;
+						if(playField[k][i] == 0) wellSums++;
 						else break;
 					}
 				}
@@ -128,17 +126,17 @@ public class PlayGame {
 		}
 
 		for(int j = 0; j < maxRow; j++) {
-			if(newField[j][0] == 0 && newField[j][1] != 0) {
+			if(playField[j][0] == 0 && playField[j][1] != 0) {
 				wellSums++;
 				for (int k = j -1; k >=0; k--) {
-					if(newField[k][0] == 0) wellSums++;
+					if(playField[k][0] == 0) wellSums++;
 					else break;
 				}
 			}
-			if(newField[j][maxCol-1] == 0 && newField[j][maxCol-2] != 0) {
+			if(playField[j][maxCol-1] == 0 && playField[j][maxCol-2] != 0) {
 				wellSums++;
 				for (int k = j -1; k >=0; k--) {
-					if(newField[k][maxCol-1] == 0) wellSums++;
+					if(playField[k][maxCol-1] == 0) wellSums++;
 					else break;
 				}
 			}
@@ -155,7 +153,7 @@ public class PlayGame {
         int oldTop[] = s.getTop();
         int oldField[][] = s.getField();
         for(int moveCount = 0; moveCount < legalMoves.length; moveCount++) {
-            int orient = legalMoves[i][0];
+            int orient = legalMoves[moveCount][0];
             int slot = legalMoves[moveCount][1];
             PlayOnThisBoard playboard = new PlayOnThisBoard(oldField,oldTop);
             // int[][] playField = copyField(oldField);
@@ -163,12 +161,12 @@ public class PlayGame {
             //do this moving on the copied board
             if(playboard.playMove(s, orient, slot)){
                 double tempScore = findFitness(playboard.getplayField(), playboard.getplayTop(), weights);
-                if(Math.abs(score - highestScore) < 0.000000001){
+                if(Math.abs(tempScore - maxScore) < 0.000000001){
                     //whenever the score is similar,random check update or not
                     if(Math.random() > 0.5)
                         optimalMove = moveCount;
                 }
-                else if(score > highestScore){
+                else if(tempScore > maxScore){
                     //if significantly improved,update
                     optimalMove = moveCount;
                     maxScore = tempScore;
@@ -177,23 +175,5 @@ public class PlayGame {
         }
         if (optimalMove == -9999) {return 0;}
         return optimalMove;
-    }
-    
-    public static void main(String[] args) {
-        State s = new State();
-        new TFrame(s);
-        PlayerSkeleton p = new PlayerSkeleton();
-	double[] tempWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
-        while(!s.hasLost()) {
-            s.makeMove(p.pickMove(tempWeights, s, s.legalMoves()));   //make this optimal move
-            s.draw();
-            s.drawNext(0,0);
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("You have completed "+s.getRowsCleared()+" rows.");
     }
 }
