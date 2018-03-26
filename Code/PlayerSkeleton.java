@@ -401,28 +401,24 @@ public class PlayerSkeleton{
 
 	public static void main(String[] args) {
 		double[] foundWeights = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-		switch (args[0]) {
-			case "--evolve":
-				double[] weights = evolveWeights();
-				System.out.println("Evolved weights are" + Arrays.toString(weights));
-				//plotData for scores, crossRates and mutationRates vs gen
-				plotData("scores vs gen", scores);
-				plotData("crossRates vs gen", crossRates);
-				plotData("mutationRates vs gen", mutationRates);
-				break;
-			// directly play game with found weights
-			// TODO
-			case "--play":
-				playGame(foundWeights);
-				break;
-			case "--test":
-				runTests();
-				break;
-			default:
-				System.out.println("To evolve the weights, use '--evolve'.");
-				System.out.println("To play the game using our weights, use '--play'.");
-				System.out.println("To run tests, use '--test'.");
-				break;
+		if (args[0].equals("--evolve")) {
+			double[] weights = evolveWeights();
+			System.out.println("Evolved weights are" + Arrays.toString(weights));
+			//plotData for scores, crossRates and mutationRates vs gen
+			plotData("scores vs gen", scores);
+			plotData("crossRates vs gen", crossRates);
+			plotData("mutationRates vs gen", mutationRates);
+		}
+		else if (args[0].equals("--play")) {
+			playGame(foundWeights);
+		}
+		else if (args[0].equals("--test")){
+			runTests();
+		}
+		else {
+			System.out.println("To evolve the weights, use '--evolve'.");
+			System.out.println("To play the game using our weights, use '--play'.");
+			System.out.println("To run tests, use '--test'.");
 		}
 	}
 
