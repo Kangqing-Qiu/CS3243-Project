@@ -113,7 +113,7 @@ public class PlayerSkeleton{
 	static double[] scores = new double[NUM_GENS]; // average game scores
 	static double[] crossRates = new double[NUM_GENS];
 	static double[] mutationRates = new double[NUM_GENS];
-	int t = 1;
+ 	static int t = 1; // time variable
 
 	// returns sum of scores over NUM_GAMES games played
 	// TODO: instead of for-loop, use mapreduce
@@ -164,7 +164,7 @@ public class PlayerSkeleton{
     		else{
       			POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
     		}
-    		t++;
+    		t++; // increase time variable
   	}
 	
 	// uses the genetic algorithm and returns the best weights
