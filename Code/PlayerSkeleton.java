@@ -157,8 +157,8 @@ public class PlayerSkeleton{
 	// reduce the population size after half of the total generations
  	// half constant, half decreases exponentially
   	// NOT YET TESTED
-  	public static void evolvePopSize(int GENS_count, int POP_SIZE){
-    		if (GENS_count < NUM_GENS / 2){
+  	public static void evolvePopSize(int genCount, int POP_SIZE){
+    		if (genCount < NUM_GENS / 2){
       			POP_SIZE = POP_SIZE;
     		}
     		else{
@@ -193,8 +193,6 @@ public class PlayerSkeleton{
 		for (int i = 0; i < NUM_GENS; i++) {
 			System.out.println("generation " + i);
 			// how many children have been generated so far
-			int GENS_count = i;
-      			// record the current generation number
 			int childrenCount = 0;
 			// number of crossovers performed in this generation
 			int crossCount = 0;
@@ -214,7 +212,7 @@ public class PlayerSkeleton{
 			// TODO: instead of iterating through population, use mapreduce
 			for (int j = 0; j < POP_SIZE; j++) {
 				population[j].gameScore = getGameResult(population[j].weights);
-				evolvePopSize(GENS_count,POP_SIZE);
+				evolvePopSize(i,POP_SIZE);
 			}
 
 			// generate all the children for this generation
