@@ -394,7 +394,7 @@ public class PlayerSkeleton{
 		
 		int NUM_GENS = 2;
   		for (int i = 1; i < NUM_GENS; i++ ){
-    			POP = evolvePopSize(i, 5);
+    			int POP = evolvePopSize(i, 5);
     			println(POP);
  		}
 	}
