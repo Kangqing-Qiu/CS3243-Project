@@ -174,22 +174,24 @@ public class PlayGame {
             }
         }
         if (optimalMove == -9999) {return 0;}
-        return optimalMove;
+		return optimalMove;
     }
 	public static void main(String[] args) {
 		State s = new State();
 		new TFrame(s);
-		PlayerSkeleton p = new PlayerSkeleton();
-		double[] tempWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
+		PlayGame p = new PlayGame();
+		double[] tempWeights = {-3.1472553592987946, 2.46883837144299,-2.2945510371937452,-7.521200744605782, -6.510648376902374,-2.1908554239402918};
 		while(!s.hasLost()) {
 			s.makeMove(p.pickMove(tempWeights, s, s.legalMoves()));   //make this optimal move
 			s.draw();
 			s.drawNext(0,0);
+			/*
 			try {
 				Thread.sleep(300);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			*/
 		}
 		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
 	}

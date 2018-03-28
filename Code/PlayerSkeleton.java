@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.*;
 
 // class Individual contains methods related to individuals within a population
 class Individual implements Comparable<Individual>{
@@ -57,7 +59,7 @@ class Individual implements Comparable<Individual>{
 	}
 
 	public static int getParentChildrenScoreDiff(
-						Individual c1, Individual c2, Individual p1, 
+						Individual c1, Individual c2, Individual p1,
 						Individual p2) {
 		return c1.gameScore + c2.gameScore - p1.gameScore - p2.gameScore;
 	}
@@ -97,15 +99,46 @@ class Population{
 
 	// for debugging purposes
 	public static void printPop(Individual[] pop) {
-		int len = pop.length;
-		for (int i = 0; i < len; i++) {
-			pop[i].printInd();
+		for (Individual aPop : pop) {
+			aPop.printInd();
 			System.out.println();
 		}
 	}
 }
 
 public class PlayerSkeleton{
+	public static class evolveParallelism implements Runnable{
+		int single;
+		int POP_SIZE;
+		Individual[] population;
+		evolveParallelism(Individual[] population, int single, int POP_SIZE){
+			this.single = single;
+			this.population = population;
+			this.POP_SIZE = POP_SIZE;
+		}
+		@Override
+		public void run() {
+			population[single].gameScore = getGameResult(population[single].weights);
+		}
+	}
+	public static class gameParallelism implements Callable<Integer> {
+		double[] weights;
+		int result;
+		gameParallelism(double[] weights, int result){
+			this.weights = weights;
+			this.result = result;
+		}
+		@Override
+		public Integer call() throws Exception {
+			try{
+				result = playGame(weights);
+			}catch (Exception e){
+				e.printStackTrace();
+			}
+			return result;
+		}
+	}
+
 	static int NUM_GENS = 2;
 	// data for training/debugging/tuning purposes
 	// 40 = number of generations
@@ -119,17 +152,33 @@ public class PlayerSkeleton{
 	// TODO: instead of for-loop, use mapreduce
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
-		int NUM_GAMES=0;
+		int NUM_GAMES=5;
 		int result = 0;
-		for (int i = 0; i < NUM_GAMES; i++) {
-			result += playGame(weights);
+		int threads = Runtime.getRuntime().availableProcessors();
+		ExecutorService executor = Executors.newFixedThreadPool(threads);
+		ArrayList<Future<Integer>> futures = new ArrayList<>();
+		for(int i = 0; i < NUM_GAMES; i++) {
+			Callable<Integer> gameParallelism = new gameParallelism(weights, result);
+			System.out.println("Threads "+ Thread.currentThread() +" is executing");
+			Future<Integer> future = executor.submit(gameParallelism);
+			futures.add(future);
 		}
+		executor.shutdown();
+		for(Future<Integer> future : futures){
+			try {
+				result+=future.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("All threads are done!");
+		System.out.println("Individual with weights "+ Arrays.toString(weights) +" gets "+result);
 		return result;
 	}
 
 	// returns an array of two elements that are the updated [cRate, mRate]
-	public static double[] updateRates(double cRate, double mRate, 
-		double cProgress, double mProgress, double cCount, 
+	public static double[] updateRates(double cRate, double mRate,
+		double cProgress, double mProgress, double cCount,
 		double mCount, int maxGS, int minGS, double avGS) {
 		double delta;
 		// if max and min are essentially the same
@@ -158,13 +207,10 @@ public class PlayerSkeleton{
  	// half constant, half decreases exponentially
   	// NOT YET TESTED
   	public static int evolvePopSize(int genCount, int POP_SIZE){
-    		if (genCount < NUM_GENS / 2){
-      			POP_SIZE = POP_SIZE;
-    		}
-    		else{
-      			POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
-    		}
-    		t++; // increase time variable
+		if (genCount >= NUM_GENS / 2) {
+              POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
+        }
+		t++; // increase time variable
 		return POP_SIZE;
   	}
 	
@@ -211,11 +257,15 @@ public class PlayerSkeleton{
 			// play the game with current weights to obtain current fitness
 			// iterating through population[] array
 			// TODO: instead of iterating through population, use mapreduce
+			int threads = Runtime.getRuntime().availableProcessors();
+			ExecutorService executor = Executors.newFixedThreadPool(threads);
 			for (int j = 0; j < POP_SIZE; j++) {
-				population[j].gameScore = getGameResult(population[j].weights);
-				evolvePopSize(i,POP_SIZE);
+				System.out.println("Individual "+ Arrays.toString(population[j].weights) +" is executing");
+				Runnable individual = new evolveParallelism(population,j,POP_SIZE);
+				executor.execute(individual);
 			}
-
+			executor.shutdown();
+			evolvePopSize(i,POP_SIZE);
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
 			int childIndex = 0;
@@ -392,10 +442,10 @@ public class PlayerSkeleton{
 		double[] data = {9.0, 4.0, 3.0};
 		plotData("test", data);
 		
-		int NUM_GENS = 2;
-  		for (int i = 1; i < NUM_GENS; i++ ){
-    			int POP = evolvePopSize(i, 5);
-    			println(POP);
+		int NUM_GEN = 20;
+  		for (int i = 0; i < NUM_GEN; i++ ){
+    			int POP = evolvePopSize(i, 50);
+				System.out.println("POP is "+POP);
  		}
 	}
 
@@ -425,5 +475,4 @@ public class PlayerSkeleton{
 				break;
 		}
 	}
-
 }
