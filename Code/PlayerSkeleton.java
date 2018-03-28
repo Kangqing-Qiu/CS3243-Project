@@ -117,16 +117,15 @@ class PlayOnThisBoard{
 		}
 	}
 
-	public int[][] getplayField(){
+	public int[][] getPlayField(){
 		return playField;
 	}
 
-	public int[] getplayTop(){
+	public int[] getPlayTop(){
 		return playTop;
 	}
 
 	public Boolean playMove(State s,int orient,int slot) {
-		// TODO: clarify variables
 		int pWidth[][] = s.getpWidth();
 		int pHeight[][] = s.getpHeight();
 		int pTop[][][] = s.getpTop();
@@ -203,6 +202,7 @@ public class PlayerSkeleton{
 
 	// returns sum of scores over NUM_GAMES games played
 	// TODO: instead of for-loop, use mapreduce
+    // TODO: To be tested
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
 		int NUM_GAMES=5;
@@ -313,6 +313,7 @@ public class PlayerSkeleton{
 			int threads = Runtime.getRuntime().availableProcessors();
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
 			// TODO: instead of iterating through population, do this in parallel
+            // TODO: To be tested
 			for (int j = 0; j < POP_SIZE; j++) {
 				System.out.println("Individual "+ Arrays.toString(population[j].weights) +" is executing");
 				Runnable individual = new evolveParallelism(population,j,POP_SIZE);
@@ -447,7 +448,6 @@ public class PlayerSkeleton{
 	// similar to makemove in State.java, since we cannot do this on the original board
 	//the final keyword is used in several contexts to define an entity that can only be assigned once.
 	public double findFitness(final int[][] playField, final int[] playTop,double[] tempWgts){
-		// TODO: clarify variables
 		int maxRow = playField.length;
 		int maxCol = playField[0].length;
 		//temp test features
@@ -556,7 +556,6 @@ public class PlayerSkeleton{
 	}
 
 	public int pickMove(double[] weights, State s, int[][] legalMoves) {
-		// TODO: clarify variables
 		//Variable declaration
 		double maxScore = -9999;
 		int optimalMove = -9999;
@@ -570,7 +569,7 @@ public class PlayerSkeleton{
 			// int[] playTop = Arrays.copyOf(oldTop, oldTop.length);
 			//do this moving on the copied board
 			if(playboard.playMove(s, orient, slot)){
-				double tempScore = findFitness(playboard.getplayField(), playboard.getplayTop(), weights);
+				double tempScore = findFitness(playboard.getPlayField(), playboard.getPlayTop(), weights);
 				if(Math.abs(tempScore - maxScore) < 0.000000001){
 					//whenever the score is similar,random check update or not
 					if(Math.random() > 0.5)
