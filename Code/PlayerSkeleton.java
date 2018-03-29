@@ -10,6 +10,7 @@ class Individual implements Comparable<Individual>{
 	// weight for each heuristic
 	public double[] weights = new double[NUM_WEIGHTS];
 	// result after playing games; equivalent to lines cleared after game
+	// TODO: double check whether it is consistent that this describes the score of one game or sum over NUM_GAMES
 	public int gameScore = 0;
 
 	// the constructor initializes the weights randomly. All weights are within
@@ -61,10 +62,10 @@ class Individual implements Comparable<Individual>{
 		return c1.gameScore + c2.gameScore - p1.gameScore - p2.gameScore;
 	}
 
-	// allow sorting by gameScore: smallest to largest
+	// allow sorting by gameScore: strongest at front, weakest at back
 	@Override
 	public int compareTo(Individual i) {
-		return this.gameScore-i.gameScore;
+		return i.gameScore-this.gameScore;
 	}
 
 	// for debugging purposes; print an individual
@@ -191,7 +192,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 50;
+	static int NUM_GENS = 6;
 	// data for training/debugging/tuning purposes
 	// 40 = number of generations
 	// entry i is the data at the end of generation i
@@ -203,7 +204,7 @@ public class PlayerSkeleton{
 	// returns sum of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
-		int NUM_GAMES=5;
+		int NUM_GAMES=2;
 		int result = 0;
 		int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -228,6 +229,7 @@ public class PlayerSkeleton{
 	}
 
 	// returns an array of two elements that are the updated [cRate, mRate]
+	// TESTED
 	public static double[] updateRates(double cRate, double mRate,
 		double cProgress, double mProgress, double cCount,
 		double mCount, int maxGS, int minGS, double avGS) {
@@ -256,7 +258,8 @@ public class PlayerSkeleton{
 	  
 	// reduce the population size after half of the total generations
 	// population size decreases exponentially but maintains threshold of 10
-	// 10 because replacement size = floor(2.5) = 2, minimum required.
+	// note: 10 because replacement size = floor(2.5) = 2, minimum required.
+	// TESTED
   	public static int evolvePopSize(int genCount, int size){
 		System.out.println("evolvePopSize(" + genCount + ", " + size + ")");
 		boolean decrease = true;
@@ -271,27 +274,31 @@ public class PlayerSkeleton{
 		return newSize;
   	}
 
+  	// adjust replacement size to a new popSize
   	public static int scaleReplacementSize(int popSize, double rate) {
 		int newSize = (int) Math.ceil(popSize * rate);
 		if (newSize % 2 == 1) {newSize -= 1;}
 		return newSize;
 	}
 
+	// adjust tournament size to a new popSize
 	public static int scaleTournamentSize(int popSize, double rate) {
 		return (int) Math.ceil(popSize * rate);
 	}
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=100; // the size of the population
+		int POP_SIZE=10; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
 		double TOURNAMENT_RATE=0.1;
-		// REPLACEMENT_SIZE must be even number
+		// for convenience, REPLACEMENT_SIZE must be even number since we
+		// produce either 0 or 2 children each time
 		int REPLACEMENT_SIZE = (int) Math.ceil(POP_SIZE * REPLACEMENT_RATE);
 		if (REPLACEMENT_SIZE % 2 == 1) {REPLACEMENT_SIZE -= 1;}
 		System.out.println("REPLACEMENT_SIZE: " + REPLACEMENT_SIZE);
+
 		int TOURNAMENT_SIZE = (int) Math.ceil(POP_SIZE * TOURNAMENT_RATE);
 		// (0,1) value that describes the chance with which a mutation occurs
 		double mutationRate=(1.0/6.0);
@@ -303,7 +310,7 @@ public class PlayerSkeleton{
 		int rejectCount = 0;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
-		Individual[] newPopulation;
+		Individual[] newPopulation; // auxiliary array used to adjust population size
 		// for every generation
 		for (int i = 0; i < NUM_GENS; i++) {
 			System.out.println("generation " + i);
@@ -323,6 +330,7 @@ public class PlayerSkeleton{
 			double avGameScore = 0.0;
 
 			// play the game with current weights to obtain current fitness
+			// TODO: need to record down each individual's gameScore as well. (can just take of last game?)
 			int threads = Runtime.getRuntime().availableProcessors();
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
 			for (int j = 0; j < POP_SIZE; j++) {
@@ -347,11 +355,12 @@ public class PlayerSkeleton{
 				boolean mutatedOne = false;
 				boolean mutatedTwo = false;
 
-				Individual[] tournamentPlayers = new Individual[TOURNAMENT_SIZE];
 				// randomly choose TOURNAMENT_SIZE number of individuals
+				Individual[] tournamentPlayers = new Individual[TOURNAMENT_SIZE];
 				for (int k = 0; k < TOURNAMENT_SIZE; k++) {
-					int chosen = (int) (Math.random() * POP_SIZE); // check off by one?
+					int chosen = (int) (Math.random() * POP_SIZE);
 					tournamentPlayers[k] = population[chosen];
+					System.out.println("tournamentPlayers[" + k + "]'s gamescore: " + tournamentPlayers[k].gameScore);
 				}
 				Arrays.sort(tournamentPlayers);
 				Individual p1 = tournamentPlayers[0];
@@ -362,6 +371,7 @@ public class PlayerSkeleton{
 					crossCount++;
 					crossed = true;
 
+					// calculated childrens' new gameScores
 					children[0].gameScore = getGameResult(children[0].weights);
 					children[1].gameScore = getGameResult(children[1].weights);
 
@@ -371,7 +381,7 @@ public class PlayerSkeleton{
 						&& children[1].gameScore < p2.gameScore) {
 						System.out.println("rejected crossed children");
 						rejectCount++;
-						if (crossed) {crossCount--;}
+						crossCount--;
 						continue; // go back to while loop
 					}
 
@@ -411,6 +421,12 @@ public class PlayerSkeleton{
 						mutationProgress += Individual.getParentChildrenScoreDiff(children[0], children[1], p1, p2);
 					}
 				}
+				// NOTE: should not have to do this if population already had gameScore (run then remove later)
+				// calculate gameScore for children who were not crossed and not mutated either
+				// after this point, all children should have gameScore before being inserted in allChildren
+				// if (!crossed && !mutatedOne) {children[0].gameScore = getGameResult(children[0].weights);}
+				// if (!crossed && !mutatedTwo) {children[1].gameScore = getGameResult(children[1].weights);}
+
 				System.out.println("accepting children");
 				acceptCount++;
 				childrenCount += 2;
@@ -424,13 +440,9 @@ public class PlayerSkeleton{
 			Population.printPop(allChildren);
 			System.out.println("finished creating all children");
 
-			// can we avoid doing this here? (need allChildren[j] to have gameScore)
-			for (int j = 0; j < REPLACEMENT_SIZE; j++) {
-				allChildren[j].gameScore = getGameResult(allChildren[j].weights);
-			}
 			Arrays.sort(allChildren);
 
-			// discard weakest of population to scale to new population size
+			// discard weakest of population to scale down to new population size
 			// then, replace the next weakest REPLACEMENT_SIZE individuals in the population with the children
 			Arrays.sort(population); // strongest at front, weakest at back
 			if (oldPopSize != POP_SIZE) {
@@ -440,11 +452,13 @@ public class PlayerSkeleton{
 				}
 				population = newPopulation;
 			}
+			// TODO: potential bug -> if POP_SIZE - REPLACEMENT_SIZE ends up being negative
 			for (int j = POP_SIZE-REPLACEMENT_SIZE; j < POP_SIZE; j++) {
 				population[j] = allChildren[j-(POP_SIZE-REPLACEMENT_SIZE)];
 			}
 
 			// adjust crossover and mutation rates for next generation
+			// TODO: potential bug -> if REPLACEMENT_SIZE = 0 already
 			maxGameScore = Math.max(
 							population[0].gameScore, 
 							allChildren[0].gameScore);
