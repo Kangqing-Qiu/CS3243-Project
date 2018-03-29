@@ -191,7 +191,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 2;
+	static int NUM_GENS = 50;
 	// data for training/debugging/tuning purposes
 	// 40 = number of generations
 	// entry i is the data at the end of generation i
@@ -255,18 +255,24 @@ public class PlayerSkeleton{
 	}
 	  
 	// reduce the population size after half of the total generations
- 	// half constant, half decreases exponentially
-  	public static int evolvePopSize(int genCount, int POP_SIZE){
-		if (genCount >= NUM_GENS / 2) {
-              POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
+	// population size decreases exponentially but maintains threshold of 10
+  	public static int evolvePopSize(int genCount, int size){
+		System.out.println("evolvePopSize(" + genCount + ", " + size + ")");
+		boolean decrease = true;
+		int newSize = size;
+		if (genCount >= NUM_GENS / 2 && decrease) {
+			newSize = (int) (size * Math.exp(-1.0 / 5));
+			if (newSize < 10) {
+				newSize = size;
+				decrease = false;
+			}
         }
-		t++; // increase time variable
-		return POP_SIZE;
+		return newSize;
   	}
-	
+
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=10; // the size of the population
+		int POP_SIZE=100; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
@@ -305,8 +311,6 @@ public class PlayerSkeleton{
 			double avGameScore = 0.0;
 
 			// play the game with current weights to obtain current fitness
-			// iterating through population[] array
-			// TODO: instead of iterating through population, use mapreduce
 			int threads = Runtime.getRuntime().availableProcessors();
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
 			for (int j = 0; j < POP_SIZE; j++) {
@@ -315,8 +319,8 @@ public class PlayerSkeleton{
 				executor.execute(individual);
 			}
 			executor.shutdown();
-			
-			evolvePopSize(i,POP_SIZE);
+
+			POP_SIZE = evolvePopSize(i,POP_SIZE);
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
 			int childIndex = 0;
@@ -623,13 +627,15 @@ public class PlayerSkeleton{
 
 		// double[] data = {100.0, 50.0, 20.0, 80.0};
 		// plotData("test", "t", "val", data);
-		
-		int NUM_GEN = 20;
-  		for (int i = 0; i < NUM_GEN; i++ ){
-    			int POP = evolvePopSize(i, 50);
-				System.out.println("POP is " + POP);
- 		}
+
+		int currSize = 100;
+		for (int i = 0; i < 50; i++) {
+			int nextSize = evolvePopSize(i, currSize);
+			currSize = nextSize;
+			System.out.println("currSize is " + currSize);
+		}
 	}
+
 	public static void main(String[] args) {
 		double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
 		if (args[0].equals("--evolve")) {
