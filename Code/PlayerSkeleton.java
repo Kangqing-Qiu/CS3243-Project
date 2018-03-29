@@ -3,6 +3,7 @@ import java.util.Arrays;
 import java.util.concurrent.*;
 
 // class Individual contains methods related to individuals within a population
+// TESTED all methods in this class
 class Individual implements Comparable<Individual>{
 	// number of heuristics used
 	public static final int NUM_WEIGHTS = 6;
@@ -13,7 +14,6 @@ class Individual implements Comparable<Individual>{
 
 	// the constructor initializes the weights randomly. All weights are within
 	// range (-10, 0) except for linesCleared, which is in the range (0, 10)
-	// TESTED
 	public Individual(){
 		for (int i = 0; i<NUM_WEIGHTS; i++){
 			weights[i] = Math.random()*(-10);
@@ -22,8 +22,7 @@ class Individual implements Comparable<Individual>{
 
 	}
 
-	// cross two individuals and returns the 2 children
-	// TESTED
+	// cross two individuals and return the 2 children
 	public Individual[] cross(Individual p2, double crossRate) {
 		Individual[] children = {this, p2};
 		if (Math.random() > crossRate) {
@@ -43,8 +42,6 @@ class Individual implements Comparable<Individual>{
 	}
 
 	// mutate an individual by altering one of its weights randomly
-	// TESTED
-	// check if there's a better function to get a random int
 	public void mutate(double mutationRate) {
 		// chose a weight to mutate
 		int MUTATED_WEIGHT = (int)(Math.random() * NUM_WEIGHTS);
@@ -64,13 +61,13 @@ class Individual implements Comparable<Individual>{
 		return c1.gameScore + c2.gameScore - p1.gameScore - p2.gameScore;
 	}
 
-	// allow sorting by gameScore
+	// allow sorting by gameScore: smallest to largest
 	@Override
 	public int compareTo(Individual i) {
 		return this.gameScore-i.gameScore;
 	}
 
-	// for debugging purposes
+	// for debugging purposes; print an individual
 	public void printInd() {
 		System.out.println("Weights are: " + weights[0] + ", " + weights[1] + ", " + weights[2] + ", " + weights[3] + ", " + weights[4] + ", " + weights[5]);
 		System.out.println("gameScore is: " + gameScore);
@@ -78,9 +75,9 @@ class Individual implements Comparable<Individual>{
 }
 
 // class Population contains methods related to operations on populations of individuals
+// TESTED all methods in this class
 class Population{
 	// create a population of size popSize
-	// TESTED
 	public static Individual[] initializeRandomPopulation(int popSize) {
 		Individual[] population = new Individual[popSize];
 		for (int i = 0; i < popSize; i++) {
@@ -89,7 +86,9 @@ class Population{
 		return population;
 	}
 
-	public static double getAvGameScore(Individual[] population, int size) {
+	// calculate the average game score of individuals in a population.
+	public static double getAvGameScore(Individual[] population) {
+		int size = population.length;
 		int gameScoreSum = 0;
 		for (int i = 0; i < size; i++) {
 			gameScoreSum += population[i].gameScore;
@@ -97,7 +96,7 @@ class Population{
 		return 1.0 * gameScoreSum / size;
 	}
 
-	// for debugging purposes
+	// for debugging purposes; print all individuals in a population
 	public static void printPop(Individual[] pop) {
 		for (Individual aPop : pop) {
 			aPop.printInd();
@@ -125,6 +124,7 @@ class PlayOnThisBoard{
 		return playTop;
 	}
 
+	// similar to makemove in State.java, since we cannot do this on the original board
 	public Boolean playMove(State s,int orient,int slot) {
 		int pWidth[][] = s.getpWidth();
 		int pHeight[][] = s.getpHeight();
@@ -201,8 +201,6 @@ public class PlayerSkeleton{
  	static int t = 1; // time variable
 
 	// returns sum of scores over NUM_GAMES games played
-	// TODO: instead of for-loop, use mapreduce
-    // TODO: To be tested
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
 		int NUM_GAMES=5;
@@ -258,7 +256,6 @@ public class PlayerSkeleton{
 	  
 	// reduce the population size after half of the total generations
  	// half constant, half decreases exponentially
-  	// NOT YET TESTED
   	public static int evolvePopSize(int genCount, int POP_SIZE){
 		if (genCount >= NUM_GENS / 2) {
               POP_SIZE = (int)(POP_SIZE * Math.exp(-t/5));
@@ -312,14 +309,13 @@ public class PlayerSkeleton{
 			// TODO: instead of iterating through population, use mapreduce
 			int threads = Runtime.getRuntime().availableProcessors();
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
-			// TODO: instead of iterating through population, do this in parallel
-            // TODO: To be tested
 			for (int j = 0; j < POP_SIZE; j++) {
 				System.out.println("Individual "+ Arrays.toString(population[j].weights) +" is executing");
 				Runnable individual = new evolveParallelism(population,j,POP_SIZE);
 				executor.execute(individual);
 			}
 			executor.shutdown();
+			
 			evolvePopSize(i,POP_SIZE);
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
@@ -425,7 +421,7 @@ public class PlayerSkeleton{
 			minGameScore = Math.min(
 							population[POP_SIZE-REPLACEMENT_SIZE].gameScore, 
 							allChildren[REPLACEMENT_SIZE-1].gameScore);
-			avGameScore = Population.getAvGameScore(population, POP_SIZE);
+			avGameScore = Population.getAvGameScore(population);
 			double[] newRates = updateRates(crossRate, mutationRate, 
 											crossProgress, mutationProgress,
 											crossCount, mutationCount, 
@@ -445,12 +441,11 @@ public class PlayerSkeleton{
 		return population[0].weights;
 	}
 
-	// similar to makemove in State.java, since we cannot do this on the original board
 	//the final keyword is used in several contexts to define an entity that can only be assigned once.
 	public double findFitness(final int[][] playField, final int[] playTop,double[] tempWgts){
 		int maxRow = playField.length;
 		int maxCol = playField[0].length;
-		//temp test features
+		// features
 		double landingHeight = 0; // Done
 		double rowsCleared = 0; // Done
 		double rowTransitions = 0; // Done
@@ -540,9 +535,8 @@ public class PlayerSkeleton{
 		State s = new State();
 		new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
-		double[] tempWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
 		while(!s.hasLost()) {
-			s.makeMove(p.pickMove(tempWeights, s, s.legalMoves()));   //make this optimal move
+			s.makeMove(p.pickMove(weights, s, s.legalMoves()));   //make this optimal move
 			s.draw();
 			s.drawNext(0,0);
 			try {
@@ -586,24 +580,25 @@ public class PlayerSkeleton{
 		return optimalMove;
 	}
 
-	public static void plotData(String name, double[] data) {
+	// TESTED
+	public static void plotData(String name, String x, String y, double[] data) {
 		System.out.println("Graph for " + name + ":");
 		for (double aData : data) {
 			System.out.print(aData + " ");
 		}
-		double[] x = new double[data.length]; x[0] = 1;
-		for(int i = 1; i < x.length; i++){
-			x[i] = i+1;
+		double[] xa = new double[data.length]; xa[0] = 1;
+		for(int i = 1; i < xa.length; i++){
+			xa[i] = i+1;
 		}
 		MatlabChart fig = new MatlabChart();
 
-		fig.plot(x, data, "-r", 2.0f, "AAPL");
+		fig.plot(xa, data, "-r", 2.0f, "data");
 		fig.RenderPlot();
 		fig.title(name);
-		fig.xlim(10, 100);
-		fig.ylim(200, 300);
-		fig.xlabel("Days");
-		fig.ylabel("Price");
+		fig.xlim(0, 100);
+		fig.ylim(0, 300);
+		fig.xlabel(x);
+		fig.ylabel(y);
 		fig.grid("on","on");
 		fig.legend("northeast");
 		fig.font("Helvetica",15);
@@ -612,32 +607,37 @@ public class PlayerSkeleton{
 
 	public static void runTests() {
 		Individual[] pop = Population.initializeRandomPopulation(5);
+		pop[0].gameScore = 3;
+		pop[1].gameScore = 6;
+		pop[2].gameScore = 2;
+		pop[3].gameScore = 4;
+		Arrays.sort(pop);
+		System.out.println("ave = " + Population.getAvGameScore(pop));
 		// Population.printPop(pop);
 
 		Individual[] children = pop[0].cross(pop[1], 1.0);
-		Population.printPop(children); 
+		//Population.printPop(children);
 
 		children[0].mutate(1.0);
 		children[0].printInd();
 
-		double[] data = {9.0, 4.0, 3.0};
-		plotData("test", data);
+		// double[] data = {100.0, 50.0, 20.0, 80.0};
+		// plotData("test", "t", "val", data);
 		
 		int NUM_GEN = 20;
   		for (int i = 0; i < NUM_GEN; i++ ){
     			int POP = evolvePopSize(i, 50);
-				System.out.println("POP is "+POP);
+				System.out.println("POP is " + POP);
  		}
 	}
 	public static void main(String[] args) {
-		double[] foundWeights = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+		double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
 		if (args[0].equals("--evolve")) {
 			double[] weights = evolveWeights();
 			System.out.println("Evolved weights are" + Arrays.toString(weights));
-			//plot data for scores, crossRates and mutationRates vs gen
-			plotData("scores vs gen", scores);
-			plotData("crossRates vs gen", crossRates);
-			plotData("mutationRates vs gen", mutationRates);
+			plotData("scores vs gen", "gen", "score", scores);
+			plotData("crossRates vs gen", "gen", "score", crossRates);
+			plotData("mutationRates vs gen", "gen", "score", mutationRates);
 		}
 		else if (args[0].equals("--play")) {
 			playGame(foundWeights);
