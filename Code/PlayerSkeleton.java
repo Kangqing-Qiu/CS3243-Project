@@ -256,6 +256,7 @@ public class PlayerSkeleton{
 	  
 	// reduce the population size after half of the total generations
 	// population size decreases exponentially but maintains threshold of 10
+	// 10 because replacement size = floor(2.5) = 2, minimum required.
   	public static int evolvePopSize(int genCount, int size){
 		System.out.println("evolvePopSize(" + genCount + ", " + size + ")");
 		boolean decrease = true;
@@ -270,13 +271,23 @@ public class PlayerSkeleton{
 		return newSize;
   	}
 
+  	public static int scaleReplacementSize(int popSize, double rate) {
+		int newSize = (int) Math.ceil(popSize * rate);
+		if (newSize % 2 == 1) {newSize -= 1;}
+		return newSize;
+	}
+
+	public static int scaleTournamentSize(int popSize, double rate) {
+		return (int) Math.ceil(popSize * rate);
+	}
+
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
 		int POP_SIZE=100; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
-		double TOURNAMENT_RATE=0.5;
+		double TOURNAMENT_RATE=0.1;
 		// REPLACEMENT_SIZE must be even number
 		int REPLACEMENT_SIZE = (int) Math.ceil(POP_SIZE * REPLACEMENT_RATE);
 		if (REPLACEMENT_SIZE % 2 == 1) {REPLACEMENT_SIZE -= 1;}
@@ -292,6 +303,7 @@ public class PlayerSkeleton{
 		int rejectCount = 0;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
+		Individual[] newPopulation;
 		// for every generation
 		for (int i = 0; i < NUM_GENS; i++) {
 			System.out.println("generation " + i);
@@ -320,7 +332,12 @@ public class PlayerSkeleton{
 			}
 			executor.shutdown();
 
+			// adjust population and batch sizes
+			int oldPopSize = POP_SIZE;
 			POP_SIZE = evolvePopSize(i,POP_SIZE);
+			REPLACEMENT_SIZE = scaleReplacementSize(POP_SIZE, REPLACEMENT_RATE);
+			TOURNAMENT_SIZE = scaleTournamentSize(POP_SIZE, TOURNAMENT_SIZE);
+
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
 			int childIndex = 0;
@@ -411,9 +428,18 @@ public class PlayerSkeleton{
 			for (int j = 0; j < REPLACEMENT_SIZE; j++) {
 				allChildren[j].gameScore = getGameResult(allChildren[j].weights);
 			}
-			Arrays.sort(allChildren); 
-			// replace the weakest REPLACEMENT_SIZE individuals in the population with the children
+			Arrays.sort(allChildren);
+
+			// discard weakest of population to scale to new population size
+			// then, replace the next weakest REPLACEMENT_SIZE individuals in the population with the children
 			Arrays.sort(population); // strongest at front, weakest at back
+			if (oldPopSize != POP_SIZE) {
+				newPopulation = new Individual[POP_SIZE];
+				for (int k = 0; k < POP_SIZE; k++) {
+					newPopulation[k] = population[k];
+				}
+				population = newPopulation;
+			}
 			for (int j = POP_SIZE-REPLACEMENT_SIZE; j < POP_SIZE; j++) {
 				population[j] = allChildren[j-(POP_SIZE-REPLACEMENT_SIZE)];
 			}
