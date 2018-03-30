@@ -106,6 +106,8 @@ class Population{
 	}
 }
 
+// class PlayOnThisBoard contains methods to duplicate a given board and make
+// moves on the new copy of the board.
 class PlayOnThisBoard{
 	public int[][] playField;
 	public int[] playTop;
@@ -125,8 +127,9 @@ class PlayOnThisBoard{
 		return playTop;
 	}
 
-	// similar to makemove in State.java, since we cannot do this on the original board
-	public Boolean playMove(State s,int orient,int slot) {
+	// similar to makeMove in State.java, since we cannot modify the original
+	// board each time we evaluate a move
+	public Boolean playMove(State s, int orient, int slot) {
 		int pWidth[][] = s.getpWidth();
 		int pHeight[][] = s.getpHeight();
 		int pTop[][][] = s.getpTop();
@@ -137,22 +140,22 @@ class PlayOnThisBoard{
 		//height if the first column makes contact
 		int height = playTop[slot]-pBottom[nextPiece][orient][0];
 		//for each column beyond the first in the piece
-		for(int c = 1; c < pWidth[nextPiece][orient]; c++) {
+		for (int c = 1; c < pWidth[nextPiece][orient]; c++) {
 			height = Math.max(height,playTop[slot+c] - pBottom[nextPiece][orient][c]);
 		}
 		//check if game ended
-		if(height+pHeight[nextPiece][orient] >= State.ROWS) {
+		if (height+pHeight[nextPiece][orient] >= State.ROWS) {
 			return false;
 		}
 		//for each column in the piece - fill in the appropriate blocks
-		for(int i = 0; i < pWidth[nextPiece][orient]; i++) {
+		for (int i = 0; i < pWidth[nextPiece][orient]; i++) {
 			//from bottom to top of brick
-			for(int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
+			for (int h = height+pBottom[nextPiece][orient][i]; h < height+pTop[nextPiece][orient][i]; h++) {
 				playField[h][i+slot] = turnNumber;
 			}
 		}
 		//adjust top
-		for(int c = 0; c < pWidth[nextPiece][orient]; c++) {
+		for (int c = 0; c < pWidth[nextPiece][orient]; c++) {
 			playTop[slot+c] = height+pTop[nextPiece][orient][c];
 		}
 		return true;
@@ -194,12 +197,10 @@ public class PlayerSkeleton{
 
 	static int NUM_GENS = 6;
 	// data for training/debugging/tuning purposes
-	// 40 = number of generations
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
 	static double[] crossRates = new double[NUM_GENS];
 	static double[] mutationRates = new double[NUM_GENS];
- 	static int t = 1; // time variable
 
 	// returns sum of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
@@ -471,6 +472,10 @@ public class PlayerSkeleton{
 											crossCount, mutationCount, 
 											maxGameScore, minGameScore, 
 											avGameScore);
+			// sanity checks
+			if (maxGameScore < avGameScore) {System.out.println("FAILURE: maxGS < avGS");}
+			if (avGameScore < minGameScore) {System.out.println("FAILURE: avGS < minGS");}
+
 			crossRate = newRates[0];
 			mutationRate = newRates[1];
 
@@ -498,6 +503,7 @@ public class PlayerSkeleton{
 		double wellSums = 0;
 		int moveNumber = -1;
 
+		// calculate landingHeight
 		for(int i = 0; i<maxCol; i++) {
 			for (int j  = playTop[i]-1; j >=0; j--) {
 				if(playField[j][i] == 0) numHoles++;
@@ -509,6 +515,7 @@ public class PlayerSkeleton{
 				landingHeight = playTop[i];
 			}
 		}
+		// calculate rowTransitions and rowsCleared
 		for(int i = 0; i<maxRow; i++) {
 			boolean lastCell = false;
 			boolean currentCell = false;
@@ -529,6 +536,7 @@ public class PlayerSkeleton{
 			if(currentCell) rowTransitions++;
 		}
 
+		// calculate columnTransitions
 		for(int i = 0; i<maxCol; i++) {
 			boolean lastCell = true;
 			boolean currentCell = false;
@@ -543,6 +551,7 @@ public class PlayerSkeleton{
 			// if(!currentCell) columnTransitions++;
 		}
 
+		// calculate wellSums
 		for(int i = 1; i<maxCol-1; i++) {
 			for(int j = 0; j < maxRow; j++) {
 				if(playField[j][i] == 0 && playField[j][i-1] != 0 && playField[j][i+1] != 0) {
@@ -554,23 +563,23 @@ public class PlayerSkeleton{
 				}
 			}
 		}
-
 		for(int j = 0; j < maxRow; j++) {
 			if(playField[j][0] == 0 && playField[j][1] != 0) {
 				wellSums++;
-				for (int k = j -1; k >=0; k--) {
-					if(playField[k][0] == 0) wellSums++;
+				for (int k = j-1; k >= 0; k--) {
+					if (playField[k][0] == 0) wellSums++;
 					else break;
 				}
 			}
 			if(playField[j][maxCol-1] == 0 && playField[j][maxCol-2] != 0) {
 				wellSums++;
-				for (int k = j -1; k >=0; k--) {
-					if(playField[k][maxCol-1] == 0) wellSums++;
+				for (int k = j-1; k >= 0; k--) {
+					if (playField[k][maxCol-1] == 0) wellSums++;
 					else break;
 				}
 			}
 		}
+
 		return landingHeight*tempWgts[0] + rowsCleared*tempWgts[1]+ rowTransitions*tempWgts[2] +
 				columnTransitions*tempWgts[3] + numHoles*tempWgts[4] + wellSums*tempWgts[5];
 	}
@@ -594,33 +603,32 @@ public class PlayerSkeleton{
 	}
 
 	public int pickMove(double[] weights, State s, int[][] legalMoves) {
-		//Variable declaration
-		double maxScore = -9999;
-		int optimalMove = -9999;
-		int oldTop[] = s.getTop();
-		int oldField[][] = s.getField();
+		double maxScore = Integer.MIN_VALUE;
+		int optimalMove = Integer.MIN_VALUE;
+		int[] oldTop = s.getTop();
+		int[][] oldField = s.getField();
+
 		for(int moveCount = 0; moveCount < legalMoves.length; moveCount++) {
 			int orient = legalMoves[moveCount][0];
 			int slot = legalMoves[moveCount][1];
-			PlayOnThisBoard playboard = new PlayOnThisBoard(oldField,oldTop);
-			// int[][] playField = copyField(oldField);
-			// int[] playTop = Arrays.copyOf(oldTop, oldTop.length);
-			//do this moving on the copied board
-			if(playboard.playMove(s, orient, slot)){
-				double tempScore = findFitness(playboard.getPlayField(), playboard.getPlayTop(), weights);
+
+			// evaluate this move on a copy of the given board
+			PlayOnThisBoard playBoard = new PlayOnThisBoard(oldField,oldTop);
+			if(playBoard.playMove(s, orient, slot)){
+				double tempScore = findFitness(playBoard.getPlayField(), playBoard.getPlayTop(), weights);
+				//whenever the score is similar,random check update or not
 				if(Math.abs(tempScore - maxScore) < 0.000000001){
-					//whenever the score is similar,random check update or not
 					if(Math.random() > 0.5)
 						optimalMove = moveCount;
 				}
+				//if significantly improved,update
 				else if(tempScore > maxScore){
-					//if significantly improved,update
 					optimalMove = moveCount;
 					maxScore = tempScore;
 				}
 			}
 		}
-		if (optimalMove == -9999) {return 0;}
+		if (optimalMove == Integer.MIN_VALUE) {return 0;}
 		return optimalMove;
 	}
 
@@ -660,20 +668,20 @@ public class PlayerSkeleton{
 		// Population.printPop(pop);
 
 		Individual[] children = pop[0].cross(pop[1], 1.0);
-		//Population.printPop(children);
+		// Population.printPop(children);
 
 		children[0].mutate(1.0);
-		children[0].printInd();
+		// children[0].printInd();
 
 		// double[] data = {100.0, 50.0, 20.0, 80.0};
 		// plotData("test", "t", "val", data);
 
-		int currSize = 100;
+		/* int currSize = 100;
 		for (int i = 0; i < 50; i++) {
 			int nextSize = evolvePopSize(i, currSize);
 			currSize = nextSize;
 			System.out.println("currSize is " + currSize);
-		}
+		} */
 	}
 
 	public static void main(String[] args) {
