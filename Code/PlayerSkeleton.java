@@ -167,14 +167,18 @@ public class PlayerSkeleton{
 		int single;
 		int POP_SIZE;
 		Individual[] population;
-		evolveParallelism(Individual[] population, int single, int POP_SIZE){
+		CountDownLatch cdl;
+		evolveParallelism(Individual[] population, int single, int POP_SIZE, CountDownLatch cdl){
 			this.single = single;
 			this.population = population;
 			this.POP_SIZE = POP_SIZE;
+			this.cdl = cdl;
 		}
 		@Override
 		public void run() {
 			population[single].gameScore = getGameResult(population[single].weights);
+			cdl.countDown();
+			System.out.println("Waiting for: "+cdl.getCount()+" threads to finish");
 		}
 	}
 	public static class gameParallelism implements Callable<Integer> {
@@ -195,7 +199,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 6;
+	static int NUM_GENS = 2;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
@@ -205,14 +209,14 @@ public class PlayerSkeleton{
 	// returns sum of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
-		int NUM_GAMES=2;
+		int NUM_GAMES=1;
 		int result = 0;
 		int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
 		ArrayList<Future<Integer>> futures = new ArrayList<>();
 		for(int i = 0; i < NUM_GAMES; i++) {
 			Callable<Integer> gameParallelism = new gameParallelism(weights, result);
-			System.out.println("Threads "+ Thread.currentThread() +" is executing");
+			System.out.println("Individual "+ Arrays.toString(weights) +" task "+i+" is executing");
 			Future<Integer> future = executor.submit(gameParallelism);
 			futures.add(future);
 		}
@@ -224,7 +228,7 @@ public class PlayerSkeleton{
 				e.printStackTrace();
 			}
 		}
-		System.out.println("All threads are done!");
+		System.out.println("All threads are done for weights "+ Arrays.toString(weights));
 		System.out.println("Individual with weights "+ Arrays.toString(weights) +" gets "+result);
 		return result;
 	}
@@ -289,7 +293,7 @@ public class PlayerSkeleton{
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=10; // the size of the population
+		int POP_SIZE=4; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
@@ -331,15 +335,23 @@ public class PlayerSkeleton{
 			double avGameScore = 0.0;
 
 			// play the game with current weights to obtain current fitness
-			// TODO: need to record down each individual's gameScore as well. (can just take of last game?)
-			int threads = Runtime.getRuntime().availableProcessors();
+			int threads = POP_SIZE;
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
+			CountDownLatch cdl = new CountDownLatch(threads);
 			for (int j = 0; j < POP_SIZE; j++) {
 				System.out.println("Individual "+ Arrays.toString(population[j].weights) +" is executing");
-				Runnable individual = new evolveParallelism(population,j,POP_SIZE);
+				Runnable individual = new evolveParallelism(population,j,POP_SIZE,cdl);
 				executor.execute(individual);
 			}
+			System.out.println("now all threads are executed, waiting...");
+			try {
+				cdl.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			System.out.println("now all done.");
 			executor.shutdown();
+
 
 			// adjust population and batch sizes
 			int oldPopSize = POP_SIZE;
@@ -460,6 +472,8 @@ public class PlayerSkeleton{
 
 			// adjust crossover and mutation rates for next generation
 			// TODO: potential bug -> if REPLACEMENT_SIZE = 0 already
+			// TODO: allChildren.length = 0??????
+			System.out.println(allChildren.length);
 			maxGameScore = Math.max(
 							population[0].gameScore, 
 							allChildren[0].gameScore);
@@ -592,13 +606,15 @@ public class PlayerSkeleton{
 			s.makeMove(p.pickMove(weights, s, s.legalMoves()));   //make this optimal move
 			s.draw();
 			s.drawNext(0,0);
+			/*
 			try {
 				Thread.sleep(300);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			*/
 		}
-		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
+		System.out.println("You have completed "+s.getRowsCleared()+" rows with weights"+ Arrays.toString(weights));
 		return s.getRowsCleared();
 	}
 
@@ -685,7 +701,8 @@ public class PlayerSkeleton{
 	}
 
 	public static void main(String[] args) {
-		double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
+		//double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
+		double[] foundWeights = {-3.1472553592987946, 2.46883837144299,-2.2945510371937452,-7.521200744605782, -6.510648376902374,-2.1908554239402918};
 		if (args[0].equals("--evolve")) {
 			double[] weights = evolveWeights();
 			System.out.println("Evolved weights are" + Arrays.toString(weights));
