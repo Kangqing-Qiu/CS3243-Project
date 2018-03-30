@@ -199,7 +199,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 6;
+	static int NUM_GENS = 40;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
@@ -293,7 +293,7 @@ public class PlayerSkeleton{
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=10; // the size of the population
+		int POP_SIZE=40; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
@@ -465,13 +465,11 @@ public class PlayerSkeleton{
 				}
 				population = newPopulation;
 			}
-			// TODO: potential bug -> if POP_SIZE - REPLACEMENT_SIZE ends up being negative
 			for (int j = POP_SIZE-REPLACEMENT_SIZE; j < POP_SIZE; j++) {
 				population[j] = allChildren[j-(POP_SIZE-REPLACEMENT_SIZE)];
 			}
 
 			// adjust crossover and mutation rates for next generation
-			// TODO: potential bug -> if REPLACEMENT_SIZE = 0 already
 			maxGameScore = Math.max(
 							population[0].gameScore, 
 							allChildren[0].gameScore);
@@ -647,7 +645,7 @@ public class PlayerSkeleton{
 	}
 
 	// TESTED
-	public static void plotData(String name, String x, String y, double[] data) {
+	public static void plotData(String name, String x, String y, int ymax, double[] data) {
 		System.out.println("Graph for " + name + ":");
 		for (double aData : data) {
 			System.out.print(aData + " ");
@@ -662,7 +660,7 @@ public class PlayerSkeleton{
 		fig.RenderPlot();
 		fig.title(name);
 		fig.xlim(0, 100);
-		fig.ylim(0, 300);
+		fig.ylim(0, ymax);
 		fig.xlabel(x);
 		fig.ylabel(y);
 		fig.grid("on","on");
@@ -704,9 +702,9 @@ public class PlayerSkeleton{
 		if (args[0].equals("--evolve")) {
 			double[] weights = evolveWeights();
 			System.out.println("Evolved weights are" + Arrays.toString(weights));
-			plotData("scores vs gen", "gen", "score", scores);
-			plotData("crossRates vs gen", "gen", "score", crossRates);
-			plotData("mutationRates vs gen", "gen", "score", mutationRates);
+			plotData("scores vs gen", "gen", "score", 5000, scores);
+			plotData("crossRates vs gen", "gen", "crossRate", 1,crossRates);
+			plotData("mutationRates vs gen", "gen", "mutationRate", 1,mutationRates);
 		}
 		else if (args[0].equals("--play")) {
 			playGame(foundWeights);
