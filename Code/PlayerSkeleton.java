@@ -199,7 +199,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 2;
+	static int NUM_GENS = 6;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
@@ -209,7 +209,7 @@ public class PlayerSkeleton{
 	// returns sum of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
-		int NUM_GAMES=1;
+		int NUM_GAMES=2;
 		int result = 0;
 		int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -293,7 +293,7 @@ public class PlayerSkeleton{
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=4; // the size of the population
+		int POP_SIZE=10; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
@@ -472,8 +472,6 @@ public class PlayerSkeleton{
 
 			// adjust crossover and mutation rates for next generation
 			// TODO: potential bug -> if REPLACEMENT_SIZE = 0 already
-			// TODO: allChildren.length = 0??????
-			System.out.println(allChildren.length);
 			maxGameScore = Math.max(
 							population[0].gameScore, 
 							allChildren[0].gameScore);
