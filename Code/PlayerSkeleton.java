@@ -26,9 +26,6 @@ class Individual implements Comparable<Individual>{
 	// cross two individuals and return the 2 children
 	public Individual[] cross(Individual p2, double crossRate) {
 		Individual[] children = {this, p2};
-		if (Math.random() > crossRate) {
-			return children;
-		}
 		for (int i = 0; i < NUM_WEIGHTS; i++) {
 			if (Math.random() > 0.5) {
 				children[0].weights[i] = this.weights[i];
@@ -46,13 +43,11 @@ class Individual implements Comparable<Individual>{
 	public void mutate(double mutationRate) {
 		// chose a weight to mutate
 		int MUTATED_WEIGHT = (int)(Math.random() * NUM_WEIGHTS);
-		if (Math.random() < mutationRate) {
-			if (MUTATED_WEIGHT == 1) { // picked weight is linesCleared
-				this.weights[MUTATED_WEIGHT] = (10)*Math.random(); 
-			}
-			else {
-				this.weights[MUTATED_WEIGHT] = (-10)*Math.random();
-			}
+		if (MUTATED_WEIGHT == 1) { // picked weight is linesCleared
+			this.weights[MUTATED_WEIGHT] = (10) * Math.random();
+		}
+		else {
+			this.weights[MUTATED_WEIGHT] = (-10)*Math.random();
 		}
 	}
 
@@ -293,7 +288,7 @@ public class PlayerSkeleton{
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=40; // the size of the population
+		int POP_SIZE=100; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
