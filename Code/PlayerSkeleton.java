@@ -211,7 +211,7 @@ public class PlayerSkeleton{
 		ArrayList<Future<Integer>> futures = new ArrayList<>();
 		for(int i = 0; i < NUM_GAMES; i++) {
 			Callable<Integer> gameParallelism = new gameParallelism(weights, result);
-			System.out.println("Individual "+ Arrays.toString(weights) +" task "+i+" is executing");
+			//System.out.println("Individual "+ Arrays.toString(weights) +" task "+i+" is executing");
 			Future<Integer> future = executor.submit(gameParallelism);
 			futures.add(future);
 		}
@@ -223,8 +223,8 @@ public class PlayerSkeleton{
 				e.printStackTrace();
 			}
 		}
-		System.out.println("All threads are done for weights "+ Arrays.toString(weights));
-		System.out.println("Individual with weights "+ Arrays.toString(weights) +" gets "+result);
+		//System.out.println("All threads are done for weights "+ Arrays.toString(weights));
+		//System.out.println("Individual with weights "+ Arrays.toString(weights) +" gets "+result);
 		return (int) (1.0 * result / NUM_GAMES);
 	}
 
@@ -276,6 +276,7 @@ public class PlayerSkeleton{
 
   	// adjust replacement size to a new popSize
   	public static int scaleReplacementSize(int popSize, double rate) {
+		System.out.println("scaleReplacementSize(" + popSize + ", " + rate + ")");
 		int newSize = (int) Math.ceil(popSize * rate);
 		if (newSize % 2 == 1) {newSize -= 1;}
 		return newSize;
@@ -283,23 +284,21 @@ public class PlayerSkeleton{
 
 	// adjust tournament size to a new popSize
 	public static int scaleTournamentSize(int popSize, double rate) {
+		System.out.println("scaleTournamentSize(" + popSize + ", " + rate + ")");
 		return (int) Math.ceil(popSize * rate);
 	}
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=100; // the size of the population
+		int POP_SIZE=50; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
 		double TOURNAMENT_RATE=0.1;
 		// for convenience, REPLACEMENT_SIZE must be even number since we
 		// produce either 0 or 2 children each time
-		int REPLACEMENT_SIZE = (int) Math.ceil(POP_SIZE * REPLACEMENT_RATE);
-		if (REPLACEMENT_SIZE % 2 == 1) {REPLACEMENT_SIZE -= 1;}
-		System.out.println("REPLACEMENT_SIZE: " + REPLACEMENT_SIZE);
-
-		int TOURNAMENT_SIZE = (int) Math.ceil(POP_SIZE * TOURNAMENT_RATE);
+		int REPLACEMENT_SIZE = 0;
+		int TOURNAMENT_SIZE = 0;
 		// (0,1) value that describes the chance with which a mutation occurs
 		double mutationRate=(1.0/6.0);
 		// (0,1) value that describes the chance with which crossover occurs
@@ -351,7 +350,7 @@ public class PlayerSkeleton{
 			int oldPopSize = POP_SIZE;
 			POP_SIZE = evolvePopSize(i,POP_SIZE);
 			REPLACEMENT_SIZE = scaleReplacementSize(POP_SIZE, REPLACEMENT_RATE);
-			TOURNAMENT_SIZE = scaleTournamentSize(POP_SIZE, TOURNAMENT_SIZE);
+			TOURNAMENT_SIZE = scaleTournamentSize(POP_SIZE, TOURNAMENT_RATE);
 
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
@@ -367,9 +366,11 @@ public class PlayerSkeleton{
 				for (int k = 0; k < TOURNAMENT_SIZE; k++) {
 					int chosen = (int) (Math.random() * POP_SIZE);
 					tournamentPlayers[k] = population[chosen];
-					System.out.println("tournamentPlayers[" + k + "]'s gamescore: " + tournamentPlayers[k].gameScore);
 				}
 				Arrays.sort(tournamentPlayers);
+				System.out.println("Tournament size = " + POP_SIZE  + " * " + TOURNAMENT_RATE + " ~approx " + TOURNAMENT_SIZE);
+				System.out.println("Tournament players are: ");
+				Population.printPop(tournamentPlayers);
 				Individual p1 = tournamentPlayers[0];
 				Individual p2 = tournamentPlayers[1];
 				Individual[] children = {p1, p2};
@@ -441,6 +442,7 @@ public class PlayerSkeleton{
 			System.out.println("length is " + REPLACEMENT_SIZE);
 			Population.printPop(allChildren);
 			System.out.println("finished creating all children");
+			System.out.println("(mutated, crossed) = (" + mutationCount + ", " + crossCount + ")");
 
 			Arrays.sort(allChildren);
 
@@ -589,12 +591,12 @@ public class PlayerSkeleton{
 
 	public static int playGame(double[] weights) {
 		State s = new State();
-		new TFrame(s);
+		//new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
 		while(!s.hasLost()) {
 			s.makeMove(p.pickMove(weights, s, s.legalMoves()));   //make this optimal move
-			s.draw();
-			s.drawNext(0,0);
+			//s.draw();
+			//s.drawNext(0,0);
 			/*
 			try {
 				Thread.sleep(300);
