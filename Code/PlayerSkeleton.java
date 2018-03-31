@@ -201,7 +201,7 @@ public class PlayerSkeleton{
 	static double[] crossRates = new double[NUM_GENS];
 	static double[] mutationRates = new double[NUM_GENS];
 
-	// returns sum of scores over NUM_GAMES games played
+	// returns average of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
 		int NUM_GAMES=2;
@@ -225,7 +225,7 @@ public class PlayerSkeleton{
 		}
 		System.out.println("All threads are done for weights "+ Arrays.toString(weights));
 		System.out.println("Individual with weights "+ Arrays.toString(weights) +" gets "+result);
-		return result;
+		return (int) (1.0 * result / NUM_GAMES);
 	}
 
 	// returns an array of two elements that are the updated [cRate, mRate]
@@ -305,7 +305,7 @@ public class PlayerSkeleton{
 		// (0,1) value that describes the chance with which crossover occurs
 		double crossRate=0.5;
 
-		// for debugging purposes
+		// for debugging purposes: how many times (pair of) children were accepted/rejected
 		int acceptCount = 0; 
 		int rejectCount = 0;
 
@@ -347,7 +347,6 @@ public class PlayerSkeleton{
 			System.out.println("now all done.");
 			executor.shutdown();
 
-
 			// adjust population and batch sizes
 			int oldPopSize = POP_SIZE;
 			POP_SIZE = evolvePopSize(i,POP_SIZE);
@@ -387,9 +386,9 @@ public class PlayerSkeleton{
 					// otherwise, retain both children
 					if (children[0].gameScore < p2.gameScore 
 						&& children[1].gameScore < p2.gameScore) {
-						System.out.println("rejected crossed children");
 						rejectCount++;
 						crossCount--;
+						System.out.println("rejected crossed children; so far reject = " + rejectCount + ", accept = " + acceptCount);
 						continue; // go back to while loop
 					}
 
@@ -415,8 +414,8 @@ public class PlayerSkeleton{
 					// discard children if they are both worse than the worst parent
 					// otherwise, retain both children
 					if (children[0].gameScore < p2.gameScore && children[1].gameScore < p2.gameScore) {
-						System.out.println("rejected mutated children");
 						rejectCount++;
+						System.out.println("rejected mutated children; so far reject = " + rejectCount + ", accept = " + acceptCount);
 						if (mutatedOne) {mutationCount--;}
 						if (mutatedTwo) {mutationCount--;}
 						continue; // go back to while loop
@@ -429,14 +428,9 @@ public class PlayerSkeleton{
 						mutationProgress += Individual.getParentChildrenScoreDiff(children[0], children[1], p1, p2);
 					}
 				}
-				// NOTE: should not have to do this if population already had gameScore (run then remove later)
-				// calculate gameScore for children who were not crossed and not mutated either
-				// after this point, all children should have gameScore before being inserted in allChildren
-				// if (!crossed && !mutatedOne) {children[0].gameScore = getGameResult(children[0].weights);}
-				// if (!crossed && !mutatedTwo) {children[1].gameScore = getGameResult(children[1].weights);}
 
-				System.out.println("accepting children");
 				acceptCount++;
+				System.out.println("accepting children; so far reject = " + rejectCount + ", accept = " + acceptCount);
 				childrenCount += 2;
 
 				allChildren[childIndex] = children[0];
@@ -468,6 +462,8 @@ public class PlayerSkeleton{
 			maxGameScore = Math.max(
 							population[0].gameScore, 
 							allChildren[0].gameScore);
+			System.out.println("end of gen " + i + ": best parent has score " + population[0].gameScore + " and weights = " + Arrays.toString(population[0].weights));
+			System.out.println("end of gen " + i + ": best child weights = " + allChildren[0].gameScore + " and weights = " + Arrays.toString(allChildren[0].weights));
 			minGameScore = Math.min(
 							population[POP_SIZE-REPLACEMENT_SIZE].gameScore, 
 							allChildren[REPLACEMENT_SIZE-1].gameScore);
@@ -488,8 +484,10 @@ public class PlayerSkeleton{
 			scores[i] = avGameScore;
 			crossRates[i] = crossRate;
 			mutationRates[i] = mutationRate;
+			System.out.println("end of gen " + i + ": avGameScore = " + avGameScore);
+			System.out.println("end of gen " + i + ": crossRate = " + crossRate + ", mutationRate = " + mutationRate);
 		}
-		System.out.println("rejected " + rejectCount + ", accepted " + acceptCount);
+		System.out.println("over all generations, rejected " + rejectCount + ", accepted " + acceptCount);
 		// return the weights of the strongest individual after evolution process is complete
 		Arrays.sort(population);
 		return population[0].weights;
