@@ -258,7 +258,7 @@ public class PlayerSkeleton{
 	  
 	// reduce the population size after half of the total generations
 	// population size decreases exponentially but maintains threshold of 10
-	// note: 10 because replacement size = floor(2.5) = 2, minimum required.
+	// note: 20 because tournament size = 20 * 0.1 = 2, minimum required.
 	// TESTED
   	public static int evolvePopSize(int genCount, int size){
 		System.out.println("evolvePopSize(" + genCount + ", " + size + ")");
@@ -266,7 +266,7 @@ public class PlayerSkeleton{
 		int newSize = size;
 		if (genCount >= NUM_GENS / 2 && decrease) {
 			newSize = (int) (size * Math.exp(-1.0 / 5));
-			if (newSize < 10) {
+			if (newSize < 20) {
 				newSize = size;
 				decrease = false;
 			}
@@ -303,10 +303,6 @@ public class PlayerSkeleton{
 		double mutationRate=(1.0/6.0);
 		// (0,1) value that describes the chance with which crossover occurs
 		double crossRate=0.5;
-
-		// for debugging purposes: how many times (pair of) children were accepted/rejected
-		int acceptCount = 0; 
-		int rejectCount = 0;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
 		Individual[] newPopulation; // auxiliary array used to adjust population size
@@ -355,7 +351,8 @@ public class PlayerSkeleton{
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
 			int childIndex = 0;
-			// TODO: may be able to do this on a constant number of threads, then discard extras
+			// TODO: since we now call this a fixed number of times, can parallelize
+			// ie we call it (REPLACEMENT_SIZE / 2) times
 			while (childrenCount < REPLACEMENT_SIZE) {
 				boolean crossed = false;
 				boolean mutatedOne = false;
@@ -383,16 +380,6 @@ public class PlayerSkeleton{
 					children[0].gameScore = getGameResult(children[0].weights);
 					children[1].gameScore = getGameResult(children[1].weights);
 
-					// discard children if they are both worse than the worst parent
-					// otherwise, retain both children
-					if (children[0].gameScore < p2.gameScore 
-						&& children[1].gameScore < p2.gameScore) {
-						rejectCount++;
-						crossCount--;
-						System.out.println("rejected crossed children; so far reject = " + rejectCount + ", accept = " + acceptCount);
-						continue; // go back to while loop
-					}
-
 					crossProgress += Individual.getParentChildrenScoreDiff(
 						children[0], children[1], p1, p2);
 				}
@@ -411,16 +398,6 @@ public class PlayerSkeleton{
 				if (mutatedOne || mutatedTwo) {
 					if (mutatedOne) {children[0].gameScore = getGameResult(children[0].weights);}
 					if (mutatedTwo) {children[1].gameScore = getGameResult(children[1].weights);}
-					
-					// discard children if they are both worse than the worst parent
-					// otherwise, retain both children
-					if (children[0].gameScore < p2.gameScore && children[1].gameScore < p2.gameScore) {
-						rejectCount++;
-						System.out.println("rejected mutated children; so far reject = " + rejectCount + ", accept = " + acceptCount);
-						if (mutatedOne) {mutationCount--;}
-						if (mutatedTwo) {mutationCount--;}
-						continue; // go back to while loop
-					}
 
 					if (mutatedOne && mutatedTwo) {
 						mutationProgress += (2 * Individual.getParentChildrenScoreDiff(children[0], children[1], p1, p2));
@@ -430,10 +407,7 @@ public class PlayerSkeleton{
 					}
 				}
 
-				acceptCount++;
-				System.out.println("accepting children; so far reject = " + rejectCount + ", accept = " + acceptCount);
 				childrenCount += 2;
-
 				allChildren[childIndex] = children[0];
 				allChildren[childIndex+1] = children[1];
 				childIndex += 2;
@@ -489,7 +463,6 @@ public class PlayerSkeleton{
 			System.out.println("end of gen " + i + ": avGameScore = " + avGameScore);
 			System.out.println("end of gen " + i + ": crossRate = " + crossRate + ", mutationRate = " + mutationRate);
 		}
-		System.out.println("over all generations, rejected " + rejectCount + ", accepted " + acceptCount);
 		// return the weights of the strongest individual after evolution process is complete
 		Arrays.sort(population);
 		return population[0].weights;
