@@ -45,21 +45,13 @@ class Individual implements Comparable<Individual>{
 		Individual[] children = new Individual[2];
 		children[0] = returnCopy(this);
 		children[1] = returnCopy(p2);
-		System.out.println("cross():");
-		System.out.println("this is ");
-		this.printInd();
-		System.out.println("p2 is");
-		p2.printInd();
-		System.out.println("initial children[] are:");
-		Population.printPop(children);
+
 		for (int i = 0; i < NUM_WEIGHTS; i++) {
 			if (Math.random() > 0.5) {
-				System.out.println("not crossing weight " + i);
 				children[0].weights[i] = this.weights[i];
 				children[1].weights[i] = p2.weights[i];
 			}
 			else {
-				System.out.println("crossing weight " + i);
 				children[0].weights[i] = p2.weights[i];
 				children[1].weights[i] = this.weights[i];
 			}
@@ -398,7 +390,9 @@ public class PlayerSkeleton{
 				Population.printPop(tournamentPlayers);
 				Individual p1 = tournamentPlayers[0];
 				Individual p2 = tournamentPlayers[1];
-				Individual[] children = {p1, p2};
+				Individual[] children = new Individual[2];
+				children[0] = Individual.returnCopy(p1);
+				children[1] = Individual.returnCopy(p2);
 				if (Math.random() < crossRate) {
 					children = p1.cross(p2, crossRate);
 					crossCount++;
