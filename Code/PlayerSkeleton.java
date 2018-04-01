@@ -20,18 +20,46 @@ class Individual implements Comparable<Individual>{
 			weights[i] = Math.random()*(-10);
 		}
 		weights[1] = -weights[1]; //weights[1] represents linesCleared
+	}
 
+	public Individual(double[] weights, int score) {
+		for (int i = 0; i<NUM_WEIGHTS; i++){
+			this.weights[i] = weights[i];
+		}
+		this.gameScore = score;
+	}
+
+	// return a copy of the given individual
+	public static Individual returnCopy(Individual ind) {
+		double[] weights = new double[NUM_WEIGHTS];
+		for (int i = 0; i < NUM_WEIGHTS; i++) {
+			weights[i] = ind.weights[i];
+		}
+		int score = ind.gameScore;
+		Individual copy = new Individual(weights, score);
+		return copy;
 	}
 
 	// cross two individuals and return the 2 children
 	public Individual[] cross(Individual p2, double crossRate) {
-		Individual[] children = {this, p2};
+		Individual[] children = new Individual[2];
+		children[0] = returnCopy(this);
+		children[1] = returnCopy(p2);
+		System.out.println("cross():");
+		System.out.println("this is ");
+		this.printInd();
+		System.out.println("p2 is");
+		p2.printInd();
+		System.out.println("initial children[] are:");
+		Population.printPop(children);
 		for (int i = 0; i < NUM_WEIGHTS; i++) {
 			if (Math.random() > 0.5) {
+				System.out.println("not crossing weight " + i);
 				children[0].weights[i] = this.weights[i];
 				children[1].weights[i] = p2.weights[i];
 			}
 			else {
+				System.out.println("crossing weight " + i);
 				children[0].weights[i] = p2.weights[i];
 				children[1].weights[i] = this.weights[i];
 			}
@@ -194,7 +222,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 40;
+	static int NUM_GENS = 3;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
@@ -302,7 +330,7 @@ public class PlayerSkeleton{
 		// (0,1) value that describes the chance with which a mutation occurs
 		double mutationRate=(1.0/6.0);
 		// (0,1) value that describes the chance with which crossover occurs
-		double crossRate=0.5;
+		double crossRate=1.0;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
 		Individual[] newPopulation; // auxiliary array used to adjust population size
@@ -411,6 +439,9 @@ public class PlayerSkeleton{
 				allChildren[childIndex] = children[0];
 				allChildren[childIndex+1] = children[1];
 				childIndex += 2;
+				System.out.println("children from this tournament:");
+				Population.printPop(children);
+				System.out.println();
 			}
 			System.out.println("printing allChildren");
 			System.out.println("length is " + REPLACEMENT_SIZE);
@@ -444,24 +475,28 @@ public class PlayerSkeleton{
 							population[POP_SIZE-REPLACEMENT_SIZE].gameScore, 
 							allChildren[REPLACEMENT_SIZE-1].gameScore);
 			avGameScore = Population.getAvGameScore(population);
+			/*
 			double[] newRates = updateRates(crossRate, mutationRate, 
 											crossProgress, mutationProgress,
 											crossCount, mutationCount, 
 											maxGameScore, minGameScore, 
 											avGameScore);
+			*/
 			// sanity checks
 			if (maxGameScore < avGameScore) {System.out.println("FAILURE: maxGS < avGS");}
 			if (avGameScore < minGameScore) {System.out.println("FAILURE: avGS < minGS");}
 
+			/*
 			crossRate = newRates[0];
 			mutationRate = newRates[1];
+			*/
 
 			// keep track of debugging data
 			scores[i] = avGameScore;
-			crossRates[i] = crossRate;
-			mutationRates[i] = mutationRate;
+			//crossRates[i] = crossRate;
+			//mutationRates[i] = mutationRate;
 			System.out.println("end of gen " + i + ": avGameScore = " + avGameScore);
-			System.out.println("end of gen " + i + ": crossRate = " + crossRate + ", mutationRate = " + mutationRate);
+			//System.out.println("end of gen " + i + ": crossRate = " + crossRate + ", mutationRate = " + mutationRate);
 		}
 		// return the weights of the strongest individual after evolution process is complete
 		Arrays.sort(population);
@@ -645,7 +680,7 @@ public class PlayerSkeleton{
 		pop[3].gameScore = 4;
 		Arrays.sort(pop);
 		System.out.println("ave = " + Population.getAvGameScore(pop));
-		// Population.printPop(pop);
+		//Population.printPop(pop);
 
 		Individual[] children = pop[0].cross(pop[1], 1.0);
 		// Population.printPop(children);
@@ -671,8 +706,8 @@ public class PlayerSkeleton{
 			double[] weights = evolveWeights();
 			System.out.println("Evolved weights are" + Arrays.toString(weights));
 			plotData("scores vs gen", "gen", "score", 5000, scores);
-			plotData("crossRates vs gen", "gen", "crossRate", 1,crossRates);
-			plotData("mutationRates vs gen", "gen", "mutationRate", 1,mutationRates);
+			//plotData("crossRates vs gen", "gen", "crossRate", 1,crossRates);
+			//plotData("mutationRates vs gen", "gen", "mutationRate", 1,mutationRates);
 		}
 		else if (args[0].equals("--play")) {
 			playGame(foundWeights);
