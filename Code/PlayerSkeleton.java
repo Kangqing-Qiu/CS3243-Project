@@ -1,3 +1,5 @@
+import com.sun.org.apache.xpath.internal.operations.Mult;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -41,7 +43,7 @@ class Individual implements Comparable<Individual>{
 	}
 
 	// cross two individuals and return the 2 children
-	public Individual[] cross(Individual p2, double crossRate) {
+	public Individual[] cross(Individual p2) {
 		Individual[] children = new Individual[2];
 		children[0] = returnCopy(this);
 		children[1] = returnCopy(p2);
@@ -60,7 +62,7 @@ class Individual implements Comparable<Individual>{
 	}
 
 	// mutate an individual by altering one of its weights randomly
-	public void mutate(double mutationRate) {
+	public void mutate() {
 		// chose a weight to mutate
 		int MUTATED_WEIGHT = (int)(Math.random() * NUM_WEIGHTS);
 		if (MUTATED_WEIGHT == 1) { // picked weight is linesCleared
@@ -68,6 +70,42 @@ class Individual implements Comparable<Individual>{
 		}
 		else {
 			this.weights[MUTATED_WEIGHT] = (-10)*Math.random();
+		}
+	}
+
+	// TESTED
+	// call with .mutateDynamically(i, NUM_GENS)
+	// concern with this approach: likely to get stuck at extremes?
+	public void mutateDynamically(int currGen, int numGens) {
+		// first half of generations mutate completely randomly
+		if (currGen < numGens / 2) this.mutate();
+		else {
+			// chose a weight to mutate and choose a percentage change
+			int MUTATED_WEIGHT = (int)(Math.random() * NUM_WEIGHTS);
+			double[] percentages = {0.05, 0.1, 0.15};
+			int index = (int) (Math.random() * 3);
+			double percent = percentages[index];
+
+			boolean negative = (this.weights[MUTATED_WEIGHT] < 0);
+			double delta = Math.abs(this.weights[MUTATED_WEIGHT] * percent);
+			// increase by percent
+			if (Math.random() > 0.5) {
+				double newVal = this.weights[MUTATED_WEIGHT] + delta;
+				if (negative && (newVal > -0.0001))
+					this.weights[MUTATED_WEIGHT] = -0.0001;
+				else if (!negative && (newVal > 9.9999))
+					this.weights[MUTATED_WEIGHT] = 9.9999;
+				else this.weights[MUTATED_WEIGHT] = newVal;
+			}
+			// decrease by percent
+			else {
+				double newVal = this.weights[MUTATED_WEIGHT] - delta;
+				if (negative && (newVal < -9.9999))
+					this.weights[MUTATED_WEIGHT] = -9.9999;
+				else if (!negative && (newVal < 0.0001))
+					this.weights[MUTATED_WEIGHT] = 0.0001;
+				else this.weights[MUTATED_WEIGHT] = newVal;
+			}
 		}
 	}
 
@@ -394,7 +432,7 @@ public class PlayerSkeleton{
 				children[0] = Individual.returnCopy(p1);
 				children[1] = Individual.returnCopy(p2);
 				if (Math.random() < crossRate) {
-					children = p1.cross(p2, crossRate);
+					children = p1.cross(p2);
 					crossCount++;
 					crossed = true;
 
@@ -407,12 +445,12 @@ public class PlayerSkeleton{
 				}
 
 				if (Math.random() < mutationRate) {
-					children[0].mutate(mutationRate);
+					children[0].mutate();
 					mutationCount++;
 					mutatedOne = true;
 				}
 				if (Math.random() < mutationRate) {
-					children[1].mutate(mutationRate);
+					children[1].mutate();
 					mutationCount++;
 					mutatedTwo = true;
 				}
@@ -676,11 +714,11 @@ public class PlayerSkeleton{
 		System.out.println("ave = " + Population.getAvGameScore(pop));
 		//Population.printPop(pop);
 
-		Individual[] children = pop[0].cross(pop[1], 1.0);
+		Individual[] children = pop[0].cross(pop[1]);
 		// Population.printPop(children);
 
-		children[0].mutate(1.0);
-		// children[0].printInd();
+		children[0].mutate();
+		children[0].printInd();
 
 		// double[] data = {100.0, 50.0, 20.0, 80.0};
 		// plotData("test", "t", "val", data);
@@ -691,6 +729,11 @@ public class PlayerSkeleton{
 			currSize = nextSize;
 			System.out.println("currSize is " + currSize);
 		} */
+
+		for (int i = 0; i < 10; i++) {
+			children[0].mutateDynamically(i, 10);
+			children[0].printInd();
+		}
 	}
 
 	public static void main(String[] args) {
