@@ -150,6 +150,17 @@ class Population{
 		return 1.0 * gameScoreSum / size;
 	}
 
+	// calculate the variance of game scores in a population.
+	public static double getVariance(double ave, Individual[] population) {
+		int size = population.length;
+		double sum = 0;
+		for (int i = 0; i < size; i++) {
+			sum += Math.pow((population[i].gameScore - ave), 2);
+		}
+		return sum / size;
+
+	}
+
 	// for debugging purposes; print all individuals in a population
 	public static void printPop(Individual[] pop) {
 		for (Individual aPop : pop) {
@@ -252,17 +263,18 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 3;
+	static int NUM_GENS = 5;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
 	static double[] crossRates = new double[NUM_GENS];
 	static double[] mutationRates = new double[NUM_GENS];
+	static double[] deltas = new double[NUM_GENS];
 
 	// returns average of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
-		int NUM_GAMES=2;
+		int NUM_GAMES=1;
 		int result = 0;
 		int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -288,16 +300,16 @@ public class PlayerSkeleton{
 
 	// returns an array of two elements that are the updated [cRate, mRate]
 	// TESTED
-	public static double[] updateRates(double cRate, double mRate,
-		double cProgress, double mProgress, double cCount,
-		double mCount, int maxGS, int minGS, double avGS) {
-		double delta;
-		// if max and min are essentially the same
-		if (maxGS - avGS < 0.00001) {delta = 0.01;} 
-		else {delta = 0.01*(maxGS - avGS)/(maxGS - minGS);}
-
-		double avCrossProgress = 1.0 * cProgress / cCount;
-		double avMutationProgress = 1.0 * mProgress / mCount;
+	public static double[] updateRates(int i, double cRate, double mRate,
+		int cProgress, int mProgress, int cCount,
+		int mCount, double avGS, double variance) {
+		double delta = 0.0000001 * getDispersion(avGS, variance);
+		deltas[i] = delta;
+		System.out.println("delta is " + delta);
+		double avCrossProgress = 0.0;
+		if (cCount != 0) avCrossProgress = 1.0 * cProgress / cCount;
+		double avMutationProgress = 0.0;
+		if (mCount != 0) avMutationProgress = 1.0 * mProgress / mCount;
 		// increase crossover rate, decrease mutation rate
 		if (avCrossProgress > avMutationProgress) {
 			cRate += delta;
@@ -313,7 +325,7 @@ public class PlayerSkeleton{
 		rates[1] = mRate;
 		return rates;
 	}
-	  
+
 	// reduce the population size after half of the total generations
 	// population size decreases exponentially but maintains threshold of 10
 	// note: 20 because tournament size = 20 * 0.1 = 2, minimum required.
@@ -346,9 +358,15 @@ public class PlayerSkeleton{
 		return (int) Math.ceil(popSize * rate);
 	}
 
+	// calculate the index of dispersion with the given average and variance
+	public static double getDispersion(double ave, double variance) {
+		System.out.println("getDispersion(" + ave + ", " + variance + ")");
+		return variance / ave;
+	}
+
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=50; // the size of the population
+		int POP_SIZE=20; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
@@ -360,7 +378,7 @@ public class PlayerSkeleton{
 		// (0,1) value that describes the chance with which a mutation occurs
 		double mutationRate=(1.0/6.0);
 		// (0,1) value that describes the chance with which crossover occurs
-		double crossRate=1.0;
+		double crossRate=0.75;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
 		Individual[] newPopulation; // auxiliary array used to adjust population size
@@ -377,10 +395,10 @@ public class PlayerSkeleton{
 			int mutationCount = 0;
 			// sum of gameScore gain attributed to mutation
 			int mutationProgress = 0;
-			// max, min, average gameScore in population
+			// max, average, variance of gameScore in population
 			int maxGameScore = 0;
-			int minGameScore = 0;
 			double avGameScore = 0.0;
+			double variance = 0.0;
 
 			// play the game with current weights to obtain current fitness
 			int threads = POP_SIZE;
@@ -440,8 +458,7 @@ public class PlayerSkeleton{
 					children[0].gameScore = getGameResult(children[0].weights);
 					children[1].gameScore = getGameResult(children[1].weights);
 
-					crossProgress += Individual.getParentChildrenScoreDiff(
-						children[0], children[1], p1, p2);
+					crossProgress += (2 * Individual.getParentChildrenScoreDiff(children[0], children[1], p1, p2));
 				}
 
 				if (Math.random() < mutationRate) {
@@ -503,32 +520,27 @@ public class PlayerSkeleton{
 							allChildren[0].gameScore);
 			System.out.println("end of gen " + i + ": best parent has score " + population[0].gameScore + " and weights = " + Arrays.toString(population[0].weights));
 			System.out.println("end of gen " + i + ": best child weights = " + allChildren[0].gameScore + " and weights = " + Arrays.toString(allChildren[0].weights));
-			minGameScore = Math.min(
-							population[POP_SIZE-REPLACEMENT_SIZE].gameScore, 
-							allChildren[REPLACEMENT_SIZE-1].gameScore);
 			avGameScore = Population.getAvGameScore(population);
-			/*
+			variance = Population.getVariance(avGameScore, population);
 			double[] newRates = updateRates(crossRate, mutationRate, 
 											crossProgress, mutationProgress,
-											crossCount, mutationCount, 
-											maxGameScore, minGameScore, 
-											avGameScore);
-			*/
+											crossCount, mutationCount,
+											avGameScore, variance);
+
 			// sanity checks
 			if (maxGameScore < avGameScore) {System.out.println("FAILURE: maxGS < avGS");}
-			if (avGameScore < minGameScore) {System.out.println("FAILURE: avGS < minGS");}
 
-			/*
+
 			crossRate = newRates[0];
 			mutationRate = newRates[1];
-			*/
+
 
 			// keep track of debugging data
 			scores[i] = avGameScore;
-			//crossRates[i] = crossRate;
-			//mutationRates[i] = mutationRate;
+			crossRates[i] = crossRate;
+			mutationRates[i] = mutationRate;
 			System.out.println("end of gen " + i + ": avGameScore = " + avGameScore);
-			//System.out.println("end of gen " + i + ": crossRate = " + crossRate + ", mutationRate = " + mutationRate);
+			System.out.println("end of gen " + i + ": crossRate = " + crossRate + ", mutationRate = " + mutationRate);
 		}
 		// return the weights of the strongest individual after evolution process is complete
 		Arrays.sort(population);
@@ -685,6 +697,8 @@ public class PlayerSkeleton{
 		for (double aData : data) {
 			System.out.print(aData + " ");
 		}
+		System.out.println();
+
 		double[] xa = new double[data.length]; xa[0] = 1;
 		for(int i = 1; i < xa.length; i++){
 			xa[i] = i+1;
@@ -743,8 +757,9 @@ public class PlayerSkeleton{
 			double[] weights = evolveWeights();
 			System.out.println("Evolved weights are" + Arrays.toString(weights));
 			plotData("scores vs gen", "gen", "score", 5000, scores);
-			//plotData("crossRates vs gen", "gen", "crossRate", 1,crossRates);
-			//plotData("mutationRates vs gen", "gen", "mutationRate", 1,mutationRates);
+			plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
+			plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
+			plotData("deltas vs gen", "gen", "delta", 0.1, deltas);
 		}
 		else if (args[0].equals("--play")) {
 			playGame(foundWeights);
