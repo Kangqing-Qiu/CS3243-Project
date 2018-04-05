@@ -303,7 +303,7 @@ public class PlayerSkeleton{
 	public static double[] updateRates(int i, double cRate, double mRate,
 		int cProgress, int mProgress, int cCount,
 		int mCount, double avGS, double variance) {
-		double delta = 0.0000001 * getDispersion(avGS, variance);
+		double delta = 100 / getDispersion(avGS, variance);
 		deltas[i] = delta;
 		System.out.println("delta is " + delta);
 		double avCrossProgress = 0.0;
@@ -522,7 +522,7 @@ public class PlayerSkeleton{
 			System.out.println("end of gen " + i + ": best child weights = " + allChildren[0].gameScore + " and weights = " + Arrays.toString(allChildren[0].weights));
 			avGameScore = Population.getAvGameScore(population);
 			variance = Population.getVariance(avGameScore, population);
-			double[] newRates = updateRates(crossRate, mutationRate, 
+			double[] newRates = updateRates(i, crossRate, mutationRate,
 											crossProgress, mutationProgress,
 											crossCount, mutationCount,
 											avGameScore, variance);
@@ -759,7 +759,7 @@ public class PlayerSkeleton{
 			plotData("scores vs gen", "gen", "score", 5000, scores);
 			plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
 			plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
-			plotData("deltas vs gen", "gen", "delta", 0.1, deltas);
+			plotData("deltas vs gen", "gen", "delta", 1, deltas);
 		}
 		else if (args[0].equals("--play")) {
 			playGame(foundWeights);
