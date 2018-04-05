@@ -82,8 +82,8 @@ class Individual implements Comparable<Individual>{
 		else {
 			// chose a weight to mutate and choose a percentage change
 			int MUTATED_WEIGHT = (int)(Math.random() * NUM_WEIGHTS);
-			double[] percentages = {0.05, 0.1, 0.15};
-			int index = (int) (Math.random() * 3);
+			double[] percentages = {0.1, 0.15};
+			int index = (int) (Math.random() * 2);
 			double percent = percentages[index];
 
 			boolean negative = (this.weights[MUTATED_WEIGHT] < 0);
@@ -263,7 +263,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 5;
+	static int NUM_GENS = 20;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
@@ -335,8 +335,8 @@ public class PlayerSkeleton{
 		boolean decrease = true;
 		int newSize = size;
 		if (genCount >= NUM_GENS / 2 && decrease) {
-			newSize = (int) (size * Math.exp(-1.0 / 5));
-			if (newSize < 20) {
+			newSize = (int) (size * Math.exp(-1.0 / 20));
+			if (newSize < 21) {
 				newSize = size;
 				decrease = false;
 			}
@@ -732,22 +732,23 @@ public class PlayerSkeleton{
 		// Population.printPop(children);
 
 		children[0].mutate();
-		children[0].printInd();
+		//children[0].printInd();
 
 		// double[] data = {100.0, 50.0, 20.0, 80.0};
 		// plotData("test", "t", "val", data);
 
-		/* int currSize = 100;
-		for (int i = 0; i < 50; i++) {
+		int currSize = 100;
+		for (int i = 0; i < NUM_GENS; i++) {
 			int nextSize = evolvePopSize(i, currSize);
 			currSize = nextSize;
 			System.out.println("currSize is " + currSize);
-		} */
+		}
 
+		/*
 		for (int i = 0; i < 10; i++) {
 			children[0].mutateDynamically(i, 10);
 			children[0].printInd();
-		}
+		}*/
 	}
 
 	public static void main(String[] args) {
