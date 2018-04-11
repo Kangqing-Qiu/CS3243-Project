@@ -73,9 +73,8 @@ class Individual implements Comparable<Individual>{
 		}
 	}
 
-	// TESTED
-	// call with .mutateDynamically(i, NUM_GENS)
-	// concern with this approach: likely to get stuck at extremes?
+	/*
+	// this method does not seem to improve performance
 	public void mutateDynamically(int currGen, int numGens) {
 		// first half of generations mutate completely randomly
 		if (currGen < numGens / 2) this.mutate();
@@ -108,6 +107,7 @@ class Individual implements Comparable<Individual>{
 			}
 		}
 	}
+	*/
 
 	public static int getParentChildrenScoreDiff(
 						Individual c1, Individual c2, Individual p1,
@@ -263,7 +263,7 @@ public class PlayerSkeleton{
 		}
 	}
 
-	static int NUM_GENS = 20;
+	static int NUM_GENS = 30;
 	// data for training/debugging/tuning purposes
 	// entry i is the data at the end of generation i
 	static double[] scores = new double[NUM_GENS]; // average game scores
@@ -274,7 +274,7 @@ public class PlayerSkeleton{
 	// returns average of scores over NUM_GAMES games played
 	public static int getGameResult(double[] weights) {
 		// number of games to play to determine an individual's gameScore
-		int NUM_GAMES=1;
+		int NUM_GAMES=3;
 		int result = 0;
 		int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
@@ -336,7 +336,7 @@ public class PlayerSkeleton{
 		int newSize = size;
 		if (genCount >= NUM_GENS / 2 && decrease) {
 			newSize = (int) (size * Math.exp(-1.0 / 20));
-			if (newSize < 21) {
+			if (newSize < 41) {
 				newSize = size;
 				decrease = false;
 			}
@@ -366,7 +366,7 @@ public class PlayerSkeleton{
 
 	// uses the genetic algorithm and returns the best weights
 	public static double[] evolveWeights() {
-		int POP_SIZE=20; // the size of the population
+		int POP_SIZE=100; // the size of the population
 		// proportion of population to be replaced in next generation
 		double REPLACEMENT_RATE=0.25;
 		// proportion of population to be considered in each tournament
@@ -378,7 +378,7 @@ public class PlayerSkeleton{
 		// (0,1) value that describes the chance with which a mutation occurs
 		double mutationRate=(1.0/6.0);
 		// (0,1) value that describes the chance with which crossover occurs
-		double crossRate=0.75;
+		double crossRate=0.9;
 
 		Individual[] population = Population.initializeRandomPopulation(POP_SIZE);
 		Individual[] newPopulation; // auxiliary array used to adjust population size
@@ -527,7 +527,7 @@ public class PlayerSkeleton{
 											crossCount, mutationCount,
 											avGameScore, variance);
 
-			// sanity checks
+			// sanity check
 			if (maxGameScore < avGameScore) {System.out.println("FAILURE: maxGS < avGS");}
 
 
@@ -552,11 +552,11 @@ public class PlayerSkeleton{
 		int maxRow = playField.length;
 		int maxCol = playField[0].length;
 		// features
-		double landingHeight = 0; // Done
-		double rowsCleared = 0; // Done
-		double rowTransitions = 0; // Done
-		double columnTransitions = 0; // Done
-		double numHoles = 0; // Done
+		double landingHeight = 0;
+		double rowsCleared = 0;
+		double rowTransitions = 0;
+		double columnTransitions = 0;
+		double numHoles = 0;
 		double wellSums = 0;
 		int moveNumber = -1;
 
@@ -572,6 +572,7 @@ public class PlayerSkeleton{
 				landingHeight = playTop[i];
 			}
 		}
+
 		// calculate rowTransitions and rowsCleared
 		for(int i = 0; i<maxRow; i++) {
 			boolean lastCell = false;
@@ -757,10 +758,19 @@ public class PlayerSkeleton{
 		if (args[0].equals("--evolve")) {
 			double[] weights = evolveWeights();
 			System.out.println("Evolved weights are" + Arrays.toString(weights));
+			System.out.println();
 			plotData("scores vs gen", "gen", "score", 5000, scores);
 			plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
 			plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
 			plotData("deltas vs gen", "gen", "delta", 1, deltas);
+			System.out.println("scores: " + Arrays.toString(scores));
+			System.out.println();
+			System.out.println("crossRates: " + Arrays.toString(crossRates));
+			System.out.println();
+			System.out.println("mutationRates: " + Arrays.toString(mutationRates));
+			System.out.println();
+			System.out.println("deltas: " + Arrays.toString(deltas));
+			System.out.println();
 		}
 		else if (args[0].equals("--play")) {
 			playGame(foundWeights);
