@@ -1,5 +1,3 @@
-import com.sun.org.apache.xpath.internal.operations.Mult;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -658,6 +656,7 @@ public class PlayerSkeleton{
 			}
 			*/
 		}
+		//System.out.println(s.getRowsCleared());
 		System.out.println("You have completed "+s.getRowsCleared()+" rows with weights"+ Arrays.toString(weights));
 		return s.getRowsCleared();
 	}
@@ -691,7 +690,7 @@ public class PlayerSkeleton{
 		if (optimalMove == Integer.MIN_VALUE) {return 0;}
 		return optimalMove;
 	}
-
+/*
 	// TESTED
 	public static void plotData(String name, String x, String y, int ymax, double[] data) {
 		System.out.println("Graph for " + name + ":");
@@ -718,7 +717,7 @@ public class PlayerSkeleton{
 		fig.font("Helvetica",15);
 		fig.saveas(name+".jpeg",640,480);
 	}
-
+*/
 	public static void runTests() {
 		Individual[] pop = Population.initializeRandomPopulation(5);
 		pop[0].gameScore = 3;
@@ -754,34 +753,38 @@ public class PlayerSkeleton{
 
 	public static void main(String[] args) {
 		//double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
-		double[] foundWeights = {-3.1472553592987946, 2.46883837144299,-2.2945510371937452,-7.521200744605782, -6.510648376902374,-2.1908554239402918};
-		if (args[0].equals("--evolve")) {
-			double[] weights = evolveWeights();
-			System.out.println("Evolved weights are" + Arrays.toString(weights));
-			System.out.println();
-			plotData("scores vs gen", "gen", "score", 5000, scores);
-			plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
-			plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
-			plotData("deltas vs gen", "gen", "delta", 1, deltas);
-			System.out.println("scores: " + Arrays.toString(scores));
-			System.out.println();
-			System.out.println("crossRates: " + Arrays.toString(crossRates));
-			System.out.println();
-			System.out.println("mutationRates: " + Arrays.toString(mutationRates));
-			System.out.println();
-			System.out.println("deltas: " + Arrays.toString(deltas));
-			System.out.println();
-		}
-		else if (args[0].equals("--play")) {
-			playGame(foundWeights);
-		}
-		else if (args[0].equals("--test")){
-			runTests();
-		}
-		else {
-			System.out.println("To evolve the weights, use '--evolve'.");
-			System.out.println("To play the game using our weights, use '--play'.");
-			System.out.println("To run tests, use '--test'.");
+		double[] foundWeights = {-2.5953031561074615, 6.135171396733583, -2.184882625105884, -5.9874618089311396, -7.098554416480493, -2.4152223172808496};
+		switch (args[0]) {
+			case "--evolve":
+				double[] weights = evolveWeights();
+				System.out.println("Evolved weights are" + Arrays.toString(weights));
+				//plotData("scores vs gen", "gen", "score", 5000, scores);
+				//plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
+				//plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
+				//plotData("deltas vs gen", "gen", "delta", 1, deltas);
+				break;
+			case "--play":
+				/*
+				int NUM_GAMES = 100;
+				int result = 0;
+				int threads = Runtime.getRuntime().availableProcessors();
+				ExecutorService executor = Executors.newFixedThreadPool(threads);
+				for (int i = 0; i < NUM_GAMES; i++) {
+					Callable<Integer> gameParallelism = new gameParallelism(foundWeights, result);
+					executor.submit(gameParallelism);
+				}
+				executor.shutdown();
+				*/
+				playGame(foundWeights);
+				break;
+			case "--test":
+				runTests();
+				break;
+			default:
+				System.out.println("To evolve the weights, use '--evolve'.");
+				System.out.println("To play the game using our weights, use '--play'.");
+				System.out.println("To run tests, use '--test'.");
+				break;
 		}
 	}
 }
