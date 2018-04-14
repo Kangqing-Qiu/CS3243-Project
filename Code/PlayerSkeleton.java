@@ -10,7 +10,6 @@ class Individual implements Comparable<Individual>{
 	// weight for each heuristic
 	public double[] weights = new double[NUM_WEIGHTS];
 	// result after playing games; equivalent to lines cleared after game
-	// TODO: double check whether it is consistent that this describes the score of one game or sum over NUM_GAMES
 	public int gameScore = 0;
 
 	// the constructor initializes the weights randomly. All weights are within
@@ -425,8 +424,7 @@ public class PlayerSkeleton{
 			// generate all the children for this generation
 			Individual[] allChildren = new Individual[REPLACEMENT_SIZE];
 			int childIndex = 0;
-			// TODO: since we now call this a fixed number of times, can parallelize
-			// ie we call it (REPLACEMENT_SIZE / 2) times
+			// TODO: since we call this a fixed number of times, can parallelize
 			while (childrenCount < REPLACEMENT_SIZE) {
 				boolean crossed = false;
 				boolean mutatedOne = false;
@@ -528,10 +526,8 @@ public class PlayerSkeleton{
 			// sanity check
 			if (maxGameScore < avGameScore) {System.out.println("FAILURE: maxGS < avGS");}
 
-
 			crossRate = newRates[0];
 			mutationRate = newRates[1];
-
 
 			// keep track of debugging data
 			scores[i] = avGameScore;
@@ -563,7 +559,6 @@ public class PlayerSkeleton{
 			for (int j  = playTop[i]-1; j >=0; j--) {
 				if(playField[j][i] == 0) numHoles++;
 			}
-			// System.out.println(Math.max(newTop[i]-1, 0));
 			if(playField[Math.max(playTop[i]-1, 0)][i] > moveNumber) {
 				moveNumber = playField[Math.max(playTop[i]-1, 0)][i];
 
@@ -598,13 +593,11 @@ public class PlayerSkeleton{
 			boolean currentCell = false;
 			for (int j = 0; j<maxRow-1; j++) {
 				currentCell = (playField[j][i] != 0);
-				// if(!currentCell && newField[j+1][i] !=0) numHoles++;
 				if(lastCell != currentCell) {
 					columnTransitions++;
 				}
 				lastCell = currentCell;
 			}
-			// if(!currentCell) columnTransitions++;
 		}
 
 		// calculate wellSums
@@ -656,7 +649,6 @@ public class PlayerSkeleton{
 			}
 			*/
 		}
-		//System.out.println(s.getRowsCleared());
 		System.out.println("You have completed "+s.getRowsCleared()+" rows with weights"+ Arrays.toString(weights));
 		return s.getRowsCleared();
 	}
@@ -752,7 +744,6 @@ public class PlayerSkeleton{
 	}
 
 	public static void main(String[] args) {
-		//double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
 		double[] foundWeights = {-2.5953031561074615, 6.135171396733583, -2.184882625105884, -5.9874618089311396, -7.098554416480493, -2.4152223172808496};
 		if(args.length==1) {
             switch (args[0]) {
@@ -782,10 +773,11 @@ public class PlayerSkeleton{
                     runTests();
                     break;
             }
-        } else{
-                System.out.println("To evolve the weights, use '--evolve'.");
-                System.out.println("To play the game using our weights, use '--play'.");
-                System.out.println("To run tests, use '--test'.");
+        }
+        else {
+			System.out.println("To evolve the weights, use '--evolve'.");
+			System.out.println("To play the game using our weights, use '--play'.");
+			System.out.println("To run tests, use '--test'.");
             }
 		}
 	}
