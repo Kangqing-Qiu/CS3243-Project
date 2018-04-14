@@ -642,12 +642,12 @@ public class PlayerSkeleton{
 
 	public static int playGame(double[] weights) {
 		State s = new State();
-		//new TFrame(s);
+		new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
 		while(!s.hasLost()) {
 			s.makeMove(p.pickMove(weights, s, s.legalMoves()));   //make this optimal move
-			//s.draw();
-			//s.drawNext(0,0);
+			s.draw();
+			s.drawNext(0,0);
 			/*
 			try {
 				Thread.sleep(300);
