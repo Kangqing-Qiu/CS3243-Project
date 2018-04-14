@@ -754,16 +754,17 @@ public class PlayerSkeleton{
 	public static void main(String[] args) {
 		//double[] foundWeights = {-7.25,3.87,-7.25,-7.25,-7.25,-7.25};
 		double[] foundWeights = {-2.5953031561074615, 6.135171396733583, -2.184882625105884, -5.9874618089311396, -7.098554416480493, -2.4152223172808496};
-		switch (args[0]) {
-			case "--evolve":
-				double[] weights = evolveWeights();
-				System.out.println("Evolved weights are" + Arrays.toString(weights));
-				//plotData("scores vs gen", "gen", "score", 5000, scores);
-				//plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
-				//plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
-				//plotData("deltas vs gen", "gen", "delta", 1, deltas);
-				break;
-			case "--play":
+		if(args.length==1) {
+            switch (args[0]) {
+                case "--evolve":
+                    double[] weights = evolveWeights();
+                    System.out.println("Evolved weights are" + Arrays.toString(weights));
+                    //plotData("scores vs gen", "gen", "score", 5000, scores);
+                    //plotData("crossRates vs gen", "gen", "crossRate", 1, crossRates);
+                    //plotData("mutationRates vs gen", "gen", "mutationRate", 1, mutationRates);
+                    //plotData("deltas vs gen", "gen", "delta", 1, deltas);
+                    break;
+                case "--play":
 				/*
 				int NUM_GAMES = 100;
 				int result = 0;
@@ -775,16 +776,16 @@ public class PlayerSkeleton{
 				}
 				executor.shutdown();
 				*/
-				playGame(foundWeights);
-				break;
-			case "--test":
-				runTests();
-				break;
-			default:
-				System.out.println("To evolve the weights, use '--evolve'.");
-				System.out.println("To play the game using our weights, use '--play'.");
-				System.out.println("To run tests, use '--test'.");
-				break;
+                    playGame(foundWeights);
+                    break;
+                case "--test":
+                    runTests();
+                    break;
+            }
+        } else{
+                System.out.println("To evolve the weights, use '--evolve'.");
+                System.out.println("To play the game using our weights, use '--play'.");
+                System.out.println("To run tests, use '--test'.");
+            }
 		}
 	}
-}
